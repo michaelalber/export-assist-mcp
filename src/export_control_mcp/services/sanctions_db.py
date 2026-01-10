@@ -17,6 +17,9 @@ from export_control_mcp.models.sanctions import (
     SDNEntry,
 )
 
+# Valid table names for SQL queries (prevents SQL injection)
+_VALID_TABLES = frozenset(["entity_list", "sdn_list", "denied_persons", "country_sanctions"])
+
 
 class SanctionsDBService:
     """SQLite database service for sanctions list queries.
@@ -726,8 +729,9 @@ class SanctionsDBService:
         conn = self._get_connection()
         stats = {}
 
-        for table in ["entity_list", "sdn_list", "denied_persons", "country_sanctions"]:
-            cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")
+        for table in _VALID_TABLES:
+            # Table name validated against allowlist - safe for SQL interpolation
+            cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")  # nosemgrep
             stats[table] = cursor.fetchone()[0]
 
         return stats

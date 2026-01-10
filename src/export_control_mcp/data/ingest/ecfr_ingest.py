@@ -9,8 +9,9 @@ import logging
 import re
 from pathlib import Path
 from typing import Any
-from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import Element  # Type only
 
+import defusedxml.ElementTree as ET  # noqa: N817 - ET is standard convention
 import httpx
 
 from export_control_mcp.data.ingest.base import BaseIngestor, IngestResult
@@ -255,7 +256,7 @@ class ECFRIngestor(BaseIngestor):
 
     def _parse_ecfr_xml_alternative(
         self,
-        root: ET.Element,
+        root: Element,
         parts: dict[int, str],
         cfr_title: int,
     ) -> list[RegulationChunk]:
@@ -321,7 +322,7 @@ class ECFRIngestor(BaseIngestor):
         """Get parts dictionary based on regulation type."""
         return EAR_PARTS if self._regulation_type == RegulationType.EAR else ITAR_PARTS
 
-    def _extract_part_number(self, elem: ET.Element) -> int | None:
+    def _extract_part_number(self, elem: Element) -> int | None:
         """Extract part number from element."""
         # Check N attribute
         n_attr = elem.get("N", "")
@@ -339,7 +340,7 @@ class ECFRIngestor(BaseIngestor):
 
         return None
 
-    def _extract_section_number(self, elem: ET.Element) -> str | None:
+    def _extract_section_number(self, elem: Element) -> str | None:
         """Extract section number (e.g., '730.1')."""
         n_attr = elem.get("N", "")
         if n_attr:
@@ -354,7 +355,7 @@ class ECFRIngestor(BaseIngestor):
 
         return None
 
-    def _extract_title(self, elem: ET.Element) -> str:
+    def _extract_title(self, elem: Element) -> str:
         """Extract title from element."""
         head = elem.find("HEAD")
         if head is not None and head.text:
@@ -363,7 +364,7 @@ class ECFRIngestor(BaseIngestor):
             return title.strip()
         return ""
 
-    def _extract_text(self, elem: ET.Element) -> str:
+    def _extract_text(self, elem: Element) -> str:
         """Extract all text content from element and children."""
         texts = []
 

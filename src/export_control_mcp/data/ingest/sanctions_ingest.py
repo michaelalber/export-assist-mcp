@@ -11,8 +11,9 @@ import logging
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
-from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import Element  # Type only
 
+import defusedxml.ElementTree as ET  # noqa: N817 - ET is standard convention
 import httpx
 
 from export_control_mcp.models.sanctions import (
@@ -250,7 +251,7 @@ class SanctionsIngestor:
 
         return entries
 
-    def _get_text(self, elem: ET.Element, tag: str, ns: dict | None = None) -> str | None:
+    def _get_text(self, elem: Element, tag: str, ns: dict | None = None) -> str | None:
         """Get text content of a child element."""
         if ns:
             child = elem.find(tag, ns)
