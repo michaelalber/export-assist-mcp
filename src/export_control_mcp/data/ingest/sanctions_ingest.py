@@ -140,23 +140,29 @@ class SanctionsIngestor:
         tree = ET.parse(xml_path)
         root = tree.getroot()
 
-        # Handle namespace if present
+        # Handle namespace if present (OFAC changed namespace in 2024+)
         ns = {
-            "sdn": "http://www.treasury.gov/resource-center/sanctions/SDN-List/Pages/default.aspx"
+            "sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML"
         }
 
         # Find all SDN entries (try with and without namespace)
-        sdn_entries = root.findall(".//sdnEntry") or root.findall(".//sdn:sdnEntry", ns)
+        sdn_entries = root.findall(".//{https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML}sdnEntry")
+        if not sdn_entries:
+            # Try without namespace (older format)
+            sdn_entries = root.findall(".//sdnEntry")
+
+        # Define namespace prefix for element lookups
+        ns_prefix = "{https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML}"
 
         for sdn in sdn_entries:
             try:
-                # Extract basic info
-                uid = self._get_text(sdn, "uid") or self._get_text(sdn, "sdn:uid", ns)
-                name = self._get_text(sdn, "lastName") or self._get_text(sdn, "sdn:lastName", ns)
-                first_name = self._get_text(sdn, "firstName") or self._get_text(
-                    sdn, "sdn:firstName", ns
+                # Extract basic info (try with namespace first, then without)
+                uid = self._get_text(sdn, f"{ns_prefix}uid") or self._get_text(sdn, "uid")
+                name = self._get_text(sdn, f"{ns_prefix}lastName") or self._get_text(sdn, "lastName")
+                first_name = self._get_text(sdn, f"{ns_prefix}firstName") or self._get_text(
+                    sdn, "firstName"
                 )
-                sdn_type = self._get_text(sdn, "sdnType") or self._get_text(sdn, "sdn:sdnType", ns)
+                sdn_type = self._get_text(sdn, f"{ns_prefix}sdnType") or self._get_text(sdn, "sdnType")
 
                 if not uid or not name:
                     continue
@@ -169,32 +175,28 @@ class SanctionsIngestor:
 
                 # Extract programs
                 programs = []
-                program_list = sdn.find("programList") or sdn.find("sdn:programList", ns)
+                program_list = sdn.find(f"{ns_prefix}programList") or sdn.find("programList")
                 if program_list is not None:
-                    for prog in program_list.findall("program") or program_list.findall(
-                        "sdn:program", ns
-                    ):
+                    for prog in program_list.findall(f"{ns_prefix}program") or program_list.findall("program"):
                         if prog.text:
                             programs.append(prog.text.strip())
 
                 # Extract aliases
                 aliases = []
-                aka_list = sdn.find("akaList") or sdn.find("sdn:akaList", ns)
+                aka_list = sdn.find(f"{ns_prefix}akaList") or sdn.find("akaList")
                 if aka_list is not None:
-                    for aka in aka_list.findall("aka") or aka_list.findall("sdn:aka", ns):
-                        aka_name = self._get_text(aka, "lastName") or self._get_text(
-                            aka, "sdn:lastName", ns
+                    for aka in aka_list.findall(f"{ns_prefix}aka") or aka_list.findall("aka"):
+                        aka_name = self._get_text(aka, f"{ns_prefix}lastName") or self._get_text(
+                            aka, "lastName"
                         )
                         if aka_name:
                             aliases.append(aka_name)
 
                 # Extract addresses
                 addresses = []
-                addr_list = sdn.find("addressList") or sdn.find("sdn:addressList", ns)
+                addr_list = sdn.find(f"{ns_prefix}addressList") or sdn.find("addressList")
                 if addr_list is not None:
-                    for addr in addr_list.findall("address") or addr_list.findall(
-                        "sdn:address", ns
-                    ):
+                    for addr in addr_list.findall(f"{ns_prefix}address") or addr_list.findall("address"):
                         addr_parts = []
                         for field in [
                             "address1",
@@ -204,8 +206,8 @@ class SanctionsIngestor:
                             "stateOrProvince",
                             "country",
                         ]:
-                            val = self._get_text(addr, field) or self._get_text(
-                                addr, f"sdn:{field}", ns
+                            val = self._get_text(addr, f"{ns_prefix}{field}") or self._get_text(
+                                addr, field
                             )
                             if val:
                                 addr_parts.append(val)
@@ -215,21 +217,21 @@ class SanctionsIngestor:
                 # Extract nationalities and DOBs for individuals
                 nationalities = []
                 dates_of_birth = []
-                id_list = sdn.find("idList") or sdn.find("sdn:idList", ns)
+                id_list = sdn.find(f"{ns_prefix}idList") or sdn.find("idList")
                 if id_list is not None:
-                    for id_elem in id_list.findall("id") or id_list.findall("sdn:id", ns):
-                        id_type = self._get_text(id_elem, "idType") or self._get_text(
-                            id_elem, "sdn:idType", ns
+                    for id_elem in id_list.findall(f"{ns_prefix}id") or id_list.findall("id"):
+                        id_type = self._get_text(id_elem, f"{ns_prefix}idType") or self._get_text(
+                            id_elem, "idType"
                         )
-                        id_num = self._get_text(id_elem, "idNumber") or self._get_text(
-                            id_elem, "sdn:idNumber", ns
+                        id_num = self._get_text(id_elem, f"{ns_prefix}idNumber") or self._get_text(
+                            id_elem, "idNumber"
                         )
                         if id_type and id_num and "nationality" in id_type.lower():
                             nationalities.append(id_num)
 
                 # Extract remarks
                 remarks = (
-                    self._get_text(sdn, "remarks") or self._get_text(sdn, "sdn:remarks", ns) or ""
+                    self._get_text(sdn, f"{ns_prefix}remarks") or self._get_text(sdn, "remarks") or ""
                 )
 
                 entry = SDNEntry(

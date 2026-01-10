@@ -24,16 +24,18 @@ logger = logging.getLogger(__name__)
 
 
 # eCFR API endpoints
+# Note: The eCFR API changed format. Full title download uses /full/{date}/title-{num}.xml
+# We download the full title and filter to relevant parts during parsing.
 ECFR_API_BASE = "https://www.ecfr.gov/api/versioner/v1"
 
 ECFR_SOURCES = {
-    # EAR: Title 15, Chapter VII, Subchapter C (Parts 730-774)
-    "ear_full": f"{ECFR_API_BASE}/full/current/title-15.xml?chapter=VII&subchapter=C",
-    # ITAR: Title 22, Chapter I, Subchapter M (Parts 120-130)
-    "itar_full": f"{ECFR_API_BASE}/full/current/title-22.xml?chapter=I&subchapter=M",
-    # Individual part endpoints (for targeted updates)
-    "ear_part": f"{ECFR_API_BASE}/full/current/title-15/chapter-VII/subchapter-C/part-{{part}}.xml",
-    "itar_part": f"{ECFR_API_BASE}/full/current/title-22/chapter-I/subchapter-M/part-{{part}}.xml",
+    # EAR: Title 15 (we filter to Chapter VII, Subchapter C, Parts 730-774 during parsing)
+    "ear_full": f"{ECFR_API_BASE}/full/current/title-15.xml",
+    # ITAR: Title 22 (we filter to Chapter I, Subchapter M, Parts 120-130 during parsing)
+    "itar_full": f"{ECFR_API_BASE}/full/current/title-22.xml",
+    # Individual part endpoints (for targeted updates) - may not work with new API
+    "ear_part": f"{ECFR_API_BASE}/full/current/title-15.xml",
+    "itar_part": f"{ECFR_API_BASE}/full/current/title-22.xml",
 }
 
 # EAR Parts (15 CFR 730-774)
@@ -113,6 +115,22 @@ class ECFRIngestor(BaseIngestor):
         """Return the regulation type being ingested."""
         return self._regulation_type
 
+    async def _get_latest_ecfr_date(self, client: httpx.AsyncClient) -> str | None:
+        """Fetch the latest available date for eCFR content."""
+        try:
+            response = await client.get(f"{ECFR_API_BASE}/titles")
+            response.raise_for_status()
+            data = response.json()
+            # Find the title we need (15 for EAR, 22 for ITAR)
+            title_num = 15 if self._regulation_type == RegulationType.EAR else 22
+            for title in data.get("titles", []):
+                if title.get("number") == title_num:
+                    return title.get("up_to_date_as_of")
+            return None
+        except Exception as e:
+            logger.warning(f"Failed to get eCFR date: {e}")
+            return None
+
     async def download_from_ecfr(self, force: bool = False) -> Path | None:
         """
         Download current regulations from eCFR.
@@ -124,10 +142,10 @@ class ECFRIngestor(BaseIngestor):
             Path to downloaded XML file, or None if failed.
         """
         if self._regulation_type == RegulationType.EAR:
-            url = ECFR_SOURCES["ear_full"]
+            title_num = 15
             filename = "ear_current.xml"
         else:
-            url = ECFR_SOURCES["itar_full"]
+            title_num = 22
             filename = "itar_current.xml"
 
         output_path = self.download_dir / filename
@@ -138,7 +156,16 @@ class ECFRIngestor(BaseIngestor):
 
         try:
             async with httpx.AsyncClient(timeout=300.0, follow_redirects=True) as client:
-                logger.info(f"Downloading {self.regulation_name} from eCFR...")
+                # Get the latest available date
+                latest_date = await self._get_latest_ecfr_date(client)
+                if not latest_date:
+                    logger.error("Could not determine latest eCFR date")
+                    return None
+
+                # Build URL with date (eCFR API requires specific date, not "current")
+                url = f"{ECFR_API_BASE}/full/{latest_date}/title-{title_num}.xml"
+
+                logger.info(f"Downloading {self.regulation_name} from eCFR (as of {latest_date})...")
                 response = await client.get(url)
                 response.raise_for_status()
 

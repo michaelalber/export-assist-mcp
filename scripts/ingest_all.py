@@ -149,13 +149,20 @@ async def ingest_entity_list(excel_path: Path) -> dict:
 
 async def load_sample_data() -> dict:
     """Load sample data for testing."""
-    from scripts.update_sanctions import load_sample_data as load_sanctions_sample
+    # Import directly using sys.path which was set at the top of this file
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "update_sanctions",
+        Path(__file__).parent / "update_sanctions.py"
+    )
+    update_sanctions = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(update_sanctions)
 
     logger.info("Loading sample data...")
 
     # Load sample sanctions data
     db = get_sanctions_db()
-    load_sanctions_sample(db)
+    update_sanctions.load_sample_data(db)
 
     # For regulations, we'd need sample EAR/ITAR chunks
     # For now, just return sanctions sample status
