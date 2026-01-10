@@ -4,22 +4,22 @@
 Downloads and ingests data from official government sources:
 - EAR regulations from eCFR (15 CFR 730-774)
 - ITAR regulations from eCFR (22 CFR 120-130)
-- OFAC SDN List from Treasury
-- BIS Denied Persons List from Commerce
-- BIS Entity List (requires manual download)
-- Consolidated Screening List (CSL) from OpenSanctions/Trade.gov
+- Consolidated Screening List (CSL) - combines 13 screening lists:
+  - Commerce: Entity List, Denied Persons, Unverified List, MEU List
+  - State: ITAR Debarred, Nonproliferation Sanctions
+  - Treasury: SDN, FSE, SSI, CAPTA, NS-MBS, NS-CMIC, NS-PLC
 
 Usage:
-    python scripts/ingest_all.py --all           # Ingest everything (regs + sanctions + CSL)
+    python scripts/ingest_all.py --all           # Ingest everything (regs + CSL)
     python scripts/ingest_all.py --regulations   # EAR and ITAR from eCFR
-    python scripts/ingest_all.py --sanctions     # SDN and Denied Persons
-    python scripts/ingest_all.py --csl           # Consolidated Screening List (13 lists)
+    python scripts/ingest_all.py --sanctions     # CSL (preferred, includes SDN/Entity List/etc.)
     python scripts/ingest_all.py --ear           # EAR only
     python scripts/ingest_all.py --itar          # ITAR only
-    python scripts/ingest_all.py --sdn           # OFAC SDN only
-    python scripts/ingest_all.py --denied        # BIS Denied Persons only
-    python scripts/ingest_all.py --entity-list /path/to/entity_list.xlsx
     python scripts/ingest_all.py --sample        # Load sample data for testing
+
+Legacy (use --sanctions instead):
+    python scripts/ingest_all.py --sdn           # OFAC SDN only (legacy)
+    python scripts/ingest_all.py --denied        # BIS Denied Persons only (legacy)
 """
 
 import argparse
@@ -212,11 +212,8 @@ async def ingest_all(force_download: bool = False) -> dict:
     results["ear"] = await ingest_ear(force_download)
     results["itar"] = await ingest_itar(force_download)
 
-    # Ingest sanctions
-    results["ofac_sdn"] = await ingest_ofac_sdn(force_download)
-    results["denied_persons"] = await ingest_denied_persons(force_download)
-
-    # Ingest Consolidated Screening List
+    # Ingest Consolidated Screening List (primary source for all sanctions data)
+    # CSL combines 13 lists: SDN, Entity List, Denied Persons, and more
     results["csl"] = await ingest_csl(force_download)
 
     # Load country sanctions data
@@ -246,17 +243,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python scripts/ingest_all.py --all              # Ingest everything
+    python scripts/ingest_all.py --all              # Ingest everything (regs + CSL)
     python scripts/ingest_all.py --regulations      # EAR and ITAR only
-    python scripts/ingest_all.py --sanctions        # SDN and Denied Persons
+    python scripts/ingest_all.py --sanctions        # CSL (13 combined screening lists)
     python scripts/ingest_all.py --sample           # Load sample data
-    python scripts/ingest_all.py --entity-list entity_list.xlsx
 
 Data Sources:
     EAR:  https://www.ecfr.gov (15 CFR 730-774)
     ITAR: https://www.ecfr.gov (22 CFR 120-130)
-    SDN:  https://www.treasury.gov/ofac/downloads/sdn.xml
-    DPL:  https://www.bis.doc.gov/dpl/dpl.txt
+    CSL:  https://data.opensanctions.org (mirrors trade.gov CSL)
+          Includes: SDN, Entity List, Denied Persons, Unverified List,
+          MEU List, ITAR Debarred, Nonproliferation, FSE, SSI, CAPTA,
+          NS-MBS, NS-CMIC, NS-PLC
         """,
     )
 
@@ -273,7 +271,7 @@ Data Sources:
     parser.add_argument(
         "--sanctions",
         action="store_true",
-        help="Ingest SDN and Denied Persons lists",
+        help="Ingest Consolidated Screening List (CSL - includes SDN, Entity List, Denied Persons, and 10 more)",
     )
     parser.add_argument(
         "--ear",
@@ -288,12 +286,12 @@ Data Sources:
     parser.add_argument(
         "--sdn",
         action="store_true",
-        help="Ingest OFAC SDN List only",
+        help="[Legacy] Ingest OFAC SDN only (use --sanctions for CSL instead)",
     )
     parser.add_argument(
         "--denied",
         action="store_true",
-        help="Ingest BIS Denied Persons List only",
+        help="[Legacy] Ingest BIS Denied Persons only (use --sanctions for CSL instead)",
     )
     parser.add_argument(
         "--entity-list",
@@ -304,7 +302,7 @@ Data Sources:
     parser.add_argument(
         "--csl",
         action="store_true",
-        help="Ingest Consolidated Screening List (13 combined screening lists)",
+        help="Alias for --sanctions (CSL with 13 combined screening lists)",
     )
     parser.add_argument(
         "--sample",
@@ -348,14 +346,18 @@ Data Sources:
                 results["ear"] = await ingest_ear(args.force)
             if args.regulations or args.itar:
                 results["itar"] = await ingest_itar(args.force)
-            if args.sanctions or args.sdn:
+            # --sanctions now uses CSL as primary source
+            if args.sanctions or args.csl:
+                results["csl"] = await ingest_csl(args.force)
+            # Legacy individual list ingestion (still works but CSL is preferred)
+            if args.sdn:
+                logger.warning("--sdn is deprecated. Use --sanctions for CSL instead.")
                 results["ofac_sdn"] = await ingest_ofac_sdn(args.force)
-            if args.sanctions or args.denied:
+            if args.denied:
+                logger.warning("--denied is deprecated. Use --sanctions for CSL instead.")
                 results["denied_persons"] = await ingest_denied_persons(args.force)
             if args.entity_list:
                 results["entity_list"] = await ingest_entity_list(Path(args.entity_list))
-            if args.csl:
-                results["csl"] = await ingest_csl(args.force)
 
         return results
 
