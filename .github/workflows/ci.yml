@@ -18,14 +18,20 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Ruff
-        run: pip install ruff
+      - name: Install linting tools
+        run: pip install ruff mypy
 
       - name: Run Ruff linter
         run: ruff check src/ tests/
 
       - name: Run Ruff formatter check
         run: ruff format --check src/ tests/
+
+      - name: Install project for mypy
+        run: pip install -e .
+
+      - name: Run mypy type checking
+        run: mypy src/
 
   pip-audit:
     name: Dependency Audit
