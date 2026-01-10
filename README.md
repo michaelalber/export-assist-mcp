@@ -1,6 +1,7 @@
 # Export Control MCP Server
 
 ![CI](https://github.com/michaelalber/export-assist-mcp/actions/workflows/ci.yml/badge.svg?branch=main)
+![Security](https://github.com/michaelalber/export-assist-mcp/actions/workflows/security.yml/badge.svg?branch=main)
 
 MCP server providing AI assistant tools for export control compliance (EAR/ITAR/OFAC).
 
