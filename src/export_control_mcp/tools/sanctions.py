@@ -519,10 +519,12 @@ async def search_consolidated_screening_list(
 
     # Validate source_list if provided
     if source_list and source_list not in CSL_SOURCE_LISTS:
-        return [{
-            "error": f"Invalid source_list: {source_list}",
-            "valid_options": list(CSL_SOURCE_LISTS.keys()),
-        }]
+        return [
+            {
+                "error": f"Invalid source_list: {source_list}",
+                "valid_options": list(CSL_SOURCE_LISTS.keys()),
+            }
+        ]
 
     results = db.search_csl(
         query=query,
@@ -561,10 +563,7 @@ async def get_csl_statistics() -> dict:
     total = sum(stats.values())
 
     # Map codes to display names
-    by_source = {
-        CSL_SOURCE_LISTS.get(code, code): count
-        for code, count in stats.items()
-    }
+    by_source = {CSL_SOURCE_LISTS.get(code, code): count for code, count in stats.items()}
 
     return {
         "total_entries": total,

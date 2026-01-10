@@ -18,9 +18,7 @@ from export_control_mcp.models.sanctions import (
 )
 
 # Valid table names for SQL queries (prevents SQL injection)
-_VALID_TABLES = frozenset([
-    "entity_list", "sdn_list", "denied_persons", "country_sanctions", "csl"
-])
+_VALID_TABLES = frozenset(["entity_list", "sdn_list", "denied_persons", "country_sanctions", "csl"])
 
 
 class SanctionsDBService:

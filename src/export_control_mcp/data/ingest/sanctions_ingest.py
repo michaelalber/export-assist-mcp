@@ -140,29 +140,33 @@ class SanctionsIngestor:
         tree = ET.parse(xml_path)
         root = tree.getroot()
 
-        # Handle namespace if present (OFAC changed namespace in 2024+)
-        ns = {
-            "sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML"
-        }
-
         # Find all SDN entries (try with and without namespace)
-        sdn_entries = root.findall(".//{https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML}sdnEntry")
+        # OFAC changed namespace in 2024+ to sanctionslistservice.ofac.treas.gov
+        sdn_entries = root.findall(
+            ".//{https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML}sdnEntry"
+        )
         if not sdn_entries:
             # Try without namespace (older format)
             sdn_entries = root.findall(".//sdnEntry")
 
         # Define namespace prefix for element lookups
-        ns_prefix = "{https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML}"
+        ns_prefix = (
+            "{https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML}"
+        )
 
         for sdn in sdn_entries:
             try:
                 # Extract basic info (try with namespace first, then without)
                 uid = self._get_text(sdn, f"{ns_prefix}uid") or self._get_text(sdn, "uid")
-                name = self._get_text(sdn, f"{ns_prefix}lastName") or self._get_text(sdn, "lastName")
+                name = self._get_text(sdn, f"{ns_prefix}lastName") or self._get_text(
+                    sdn, "lastName"
+                )
                 first_name = self._get_text(sdn, f"{ns_prefix}firstName") or self._get_text(
                     sdn, "firstName"
                 )
-                sdn_type = self._get_text(sdn, f"{ns_prefix}sdnType") or self._get_text(sdn, "sdnType")
+                sdn_type = self._get_text(sdn, f"{ns_prefix}sdnType") or self._get_text(
+                    sdn, "sdnType"
+                )
 
                 if not uid or not name:
                     continue
@@ -177,7 +181,9 @@ class SanctionsIngestor:
                 programs = []
                 program_list = sdn.find(f"{ns_prefix}programList") or sdn.find("programList")
                 if program_list is not None:
-                    for prog in program_list.findall(f"{ns_prefix}program") or program_list.findall("program"):
+                    for prog in program_list.findall(f"{ns_prefix}program") or program_list.findall(
+                        "program"
+                    ):
                         if prog.text:
                             programs.append(prog.text.strip())
 
@@ -196,7 +202,9 @@ class SanctionsIngestor:
                 addresses = []
                 addr_list = sdn.find(f"{ns_prefix}addressList") or sdn.find("addressList")
                 if addr_list is not None:
-                    for addr in addr_list.findall(f"{ns_prefix}address") or addr_list.findall("address"):
+                    for addr in addr_list.findall(f"{ns_prefix}address") or addr_list.findall(
+                        "address"
+                    ):
                         addr_parts = []
                         for field in [
                             "address1",
@@ -231,7 +239,9 @@ class SanctionsIngestor:
 
                 # Extract remarks
                 remarks = (
-                    self._get_text(sdn, f"{ns_prefix}remarks") or self._get_text(sdn, "remarks") or ""
+                    self._get_text(sdn, f"{ns_prefix}remarks")
+                    or self._get_text(sdn, "remarks")
+                    or ""
                 )
 
                 entry = SDNEntry(

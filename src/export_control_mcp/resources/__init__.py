@@ -1,11 +1,11 @@
 """Static reference data and resources."""
 
 from export_control_mcp.resources.doe_nuclear import (
-    CFR810AuthorizationType,
-    CFR810Country,
     GENERALLY_AUTHORIZED_DESTINATIONS,
     PROHIBITED_DESTINATIONS,
     SPECIFIC_AUTHORIZATION_ACTIVITIES,
+    CFR810AuthorizationType,
+    CFR810Country,
     get_all_generally_authorized,
     get_all_prohibited,
     get_cfr810_authorization,

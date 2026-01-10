@@ -16,7 +16,6 @@ Sources:
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -154,8 +153,7 @@ class CSLIngestor:
 
                     output_path.write_bytes(response.content)
                     logger.info(
-                        f"Downloaded CSL from {source_name} "
-                        f"({len(response.content)} bytes)"
+                        f"Downloaded CSL from {source_name} ({len(response.content)} bytes)"
                     )
                     return output_path
 
@@ -170,7 +168,7 @@ class CSLIngestor:
         """Parse CSL JSON file into CSLEntry objects."""
         entries = []
 
-        with open(json_path, "r", encoding="utf-8") as f:
+        with open(json_path, encoding="utf-8") as f:
             data = json.load(f)
 
         # Handle both OpenSanctions format (results array) and direct array

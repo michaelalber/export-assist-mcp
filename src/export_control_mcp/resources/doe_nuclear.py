@@ -339,10 +339,7 @@ def is_prohibited_destination(country: str) -> bool:
         True if country is prohibited
     """
     result = get_cfr810_authorization(country)
-    return (
-        result is not None
-        and result.authorization_type == CFR810AuthorizationType.PROHIBITED
-    )
+    return result is not None and result.authorization_type == CFR810AuthorizationType.PROHIBITED
 
 
 def get_all_generally_authorized() -> list[str]:

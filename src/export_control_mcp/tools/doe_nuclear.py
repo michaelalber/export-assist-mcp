@@ -6,10 +6,10 @@ export control guidance.
 
 from export_control_mcp.audit import audit_log
 from export_control_mcp.resources.doe_nuclear import (
-    CFR810AuthorizationType,
     GENERALLY_AUTHORIZED_ACTIVITIES,
     NATIONAL_LAB_GUIDANCE,
     SPECIFIC_AUTHORIZATION_ACTIVITIES,
+    CFR810AuthorizationType,
     get_all_generally_authorized,
     get_all_prohibited,
     get_cfr810_authorization,

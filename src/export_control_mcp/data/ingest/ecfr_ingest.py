@@ -165,7 +165,9 @@ class ECFRIngestor(BaseIngestor):
                 # Build URL with date (eCFR API requires specific date, not "current")
                 url = f"{ECFR_API_BASE}/full/{latest_date}/title-{title_num}.xml"
 
-                logger.info(f"Downloading {self.regulation_name} from eCFR (as of {latest_date})...")
+                logger.info(
+                    f"Downloading {self.regulation_name} from eCFR (as of {latest_date})..."
+                )
                 response = await client.get(url)
                 response.raise_for_status()
 
