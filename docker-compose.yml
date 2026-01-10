@@ -1,0 +1,21 @@
+services:
+  export-control-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: export-control-mcp
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - EXPORT_CONTROL_MCP_TRANSPORT=streamable-http
+      - EXPORT_CONTROL_MCP_HOST=0.0.0.0
+      - EXPORT_CONTROL_MCP_PORT=8000
+      - EXPORT_CONTROL_CHROMA_PERSIST_DIR=/app/data/chroma
+      - EXPORT_CONTROL_SANCTIONS_DB_PATH=/app/data/sanctions.db
+      - EXPORT_CONTROL_AUDIT_LOG_PATH=/app/logs/audit.jsonl
+      - EXPORT_CONTROL_LOG_LEVEL=INFO
+      - EXPORT_CONTROL_EMBEDDING_MODEL=all-MiniLM-L6-v2
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
