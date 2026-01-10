@@ -8,7 +8,6 @@ Downloads and parses sanctions data from:
 """
 
 import logging
-import re
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -141,7 +140,9 @@ class SanctionsIngestor:
         root = tree.getroot()
 
         # Handle namespace if present
-        ns = {"sdn": "http://www.treasury.gov/resource-center/sanctions/SDN-List/Pages/default.aspx"}
+        ns = {
+            "sdn": "http://www.treasury.gov/resource-center/sanctions/SDN-List/Pages/default.aspx"
+        }
 
         # Find all SDN entries (try with and without namespace)
         sdn_entries = root.findall(".//sdnEntry") or root.findall(".//sdn:sdnEntry", ns)
@@ -151,7 +152,9 @@ class SanctionsIngestor:
                 # Extract basic info
                 uid = self._get_text(sdn, "uid") or self._get_text(sdn, "sdn:uid", ns)
                 name = self._get_text(sdn, "lastName") or self._get_text(sdn, "sdn:lastName", ns)
-                first_name = self._get_text(sdn, "firstName") or self._get_text(sdn, "sdn:firstName", ns)
+                first_name = self._get_text(sdn, "firstName") or self._get_text(
+                    sdn, "sdn:firstName", ns
+                )
                 sdn_type = self._get_text(sdn, "sdnType") or self._get_text(sdn, "sdn:sdnType", ns)
 
                 if not uid or not name:
@@ -167,7 +170,9 @@ class SanctionsIngestor:
                 programs = []
                 program_list = sdn.find("programList") or sdn.find("sdn:programList", ns)
                 if program_list is not None:
-                    for prog in program_list.findall("program") or program_list.findall("sdn:program", ns):
+                    for prog in program_list.findall("program") or program_list.findall(
+                        "sdn:program", ns
+                    ):
                         if prog.text:
                             programs.append(prog.text.strip())
 
@@ -176,7 +181,9 @@ class SanctionsIngestor:
                 aka_list = sdn.find("akaList") or sdn.find("sdn:akaList", ns)
                 if aka_list is not None:
                     for aka in aka_list.findall("aka") or aka_list.findall("sdn:aka", ns):
-                        aka_name = self._get_text(aka, "lastName") or self._get_text(aka, "sdn:lastName", ns)
+                        aka_name = self._get_text(aka, "lastName") or self._get_text(
+                            aka, "sdn:lastName", ns
+                        )
                         if aka_name:
                             aliases.append(aka_name)
 
@@ -184,10 +191,21 @@ class SanctionsIngestor:
                 addresses = []
                 addr_list = sdn.find("addressList") or sdn.find("sdn:addressList", ns)
                 if addr_list is not None:
-                    for addr in addr_list.findall("address") or addr_list.findall("sdn:address", ns):
+                    for addr in addr_list.findall("address") or addr_list.findall(
+                        "sdn:address", ns
+                    ):
                         addr_parts = []
-                        for field in ["address1", "address2", "address3", "city", "stateOrProvince", "country"]:
-                            val = self._get_text(addr, field) or self._get_text(addr, f"sdn:{field}", ns)
+                        for field in [
+                            "address1",
+                            "address2",
+                            "address3",
+                            "city",
+                            "stateOrProvince",
+                            "country",
+                        ]:
+                            val = self._get_text(addr, field) or self._get_text(
+                                addr, f"sdn:{field}", ns
+                            )
                             if val:
                                 addr_parts.append(val)
                         if addr_parts:
@@ -199,14 +217,19 @@ class SanctionsIngestor:
                 id_list = sdn.find("idList") or sdn.find("sdn:idList", ns)
                 if id_list is not None:
                     for id_elem in id_list.findall("id") or id_list.findall("sdn:id", ns):
-                        id_type = self._get_text(id_elem, "idType") or self._get_text(id_elem, "sdn:idType", ns)
-                        id_num = self._get_text(id_elem, "idNumber") or self._get_text(id_elem, "sdn:idNumber", ns)
-                        if id_type and id_num:
-                            if "nationality" in id_type.lower():
-                                nationalities.append(id_num)
+                        id_type = self._get_text(id_elem, "idType") or self._get_text(
+                            id_elem, "sdn:idType", ns
+                        )
+                        id_num = self._get_text(id_elem, "idNumber") or self._get_text(
+                            id_elem, "sdn:idNumber", ns
+                        )
+                        if id_type and id_num and "nationality" in id_type.lower():
+                            nationalities.append(id_num)
 
                 # Extract remarks
-                remarks = self._get_text(sdn, "remarks") or self._get_text(sdn, "sdn:remarks", ns) or ""
+                remarks = (
+                    self._get_text(sdn, "remarks") or self._get_text(sdn, "sdn:remarks", ns) or ""
+                )
 
                 entry = SDNEntry(
                     id=f"SDN-{uid}",
@@ -493,22 +516,50 @@ class SanctionsIngestor:
             try:
                 row_data = list(row)
 
-                name = row_data[headers["name"] - 1] if "name" in headers and len(row_data) >= headers["name"] else None
+                name = (
+                    row_data[headers["name"] - 1]
+                    if "name" in headers and len(row_data) >= headers["name"]
+                    else None
+                )
                 if not name:
                     continue
 
-                aliases_str = row_data[headers["aliases"] - 1] if "aliases" in headers and len(row_data) >= headers["aliases"] else ""
+                aliases_str = (
+                    row_data[headers["aliases"] - 1]
+                    if "aliases" in headers and len(row_data) >= headers["aliases"]
+                    else ""
+                )
                 aliases = [a.strip() for a in str(aliases_str or "").split(";") if a.strip()]
 
-                address = row_data[headers["address"] - 1] if "address" in headers and len(row_data) >= headers["address"] else ""
+                address = (
+                    row_data[headers["address"] - 1]
+                    if "address" in headers and len(row_data) >= headers["address"]
+                    else ""
+                )
                 addresses = [str(address).strip()] if address else []
 
-                country = row_data[headers["country"] - 1] if "country" in headers and len(row_data) >= headers["country"] else ""
+                country = (
+                    row_data[headers["country"] - 1]
+                    if "country" in headers and len(row_data) >= headers["country"]
+                    else ""
+                )
                 country = self._normalize_country_code(str(country or ""))
 
-                license_req = row_data[headers["license_req"] - 1] if "license_req" in headers and len(row_data) >= headers["license_req"] else ""
-                license_policy = row_data[headers["license_policy"] - 1] if "license_policy" in headers and len(row_data) >= headers["license_policy"] else ""
-                fr_citation = row_data[headers["fr_citation"] - 1] if "fr_citation" in headers and len(row_data) >= headers["fr_citation"] else ""
+                license_req = (
+                    row_data[headers["license_req"] - 1]
+                    if "license_req" in headers and len(row_data) >= headers["license_req"]
+                    else ""
+                )
+                license_policy = (
+                    row_data[headers["license_policy"] - 1]
+                    if "license_policy" in headers and len(row_data) >= headers["license_policy"]
+                    else ""
+                )
+                fr_citation = (
+                    row_data[headers["fr_citation"] - 1]
+                    if "fr_citation" in headers and len(row_data) >= headers["fr_citation"]
+                    else ""
+                )
 
                 effective_date = None
                 if "effective_date" in headers and len(row_data) >= headers["effective_date"]:

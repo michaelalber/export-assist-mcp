@@ -163,9 +163,7 @@ class ECCN(BaseModel):
         # Match pattern: digit + letter + 3 digits (+ optional suffix)
         match = re.match(r"^(\d)([A-E])(\d{3})(.*)$", eccn)
         if not match:
-            raise ValueError(
-                f"Invalid ECCN format: '{eccn_str}'. Expected format like '3A001'"
-            )
+            raise ValueError(f"Invalid ECCN format: '{eccn_str}'. Expected format like '3A001'")
 
         category = int(match.group(1))
         product_group = match.group(2)
@@ -202,10 +200,26 @@ class ECCN(BaseModel):
 
 # USML Category Roman numeral mapping
 USML_ROMAN_TO_ARABIC = {
-    "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5,
-    "VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10,
-    "XI": 11, "XII": 12, "XIII": 13, "XIV": 14, "XV": 15,
-    "XVI": 16, "XVII": 17, "XVIII": 18, "XIX": 19, "XX": 20,
+    "I": 1,
+    "II": 2,
+    "III": 3,
+    "IV": 4,
+    "V": 5,
+    "VI": 6,
+    "VII": 7,
+    "VIII": 8,
+    "IX": 9,
+    "X": 10,
+    "XI": 11,
+    "XII": 12,
+    "XIII": 13,
+    "XIV": 14,
+    "XV": 15,
+    "XVI": 16,
+    "XVII": 17,
+    "XVIII": 18,
+    "XIX": 19,
+    "XX": 20,
     "XXI": 21,
 }
 
@@ -275,8 +289,8 @@ class USMLCategory(BaseModel):
                 try:
                     arabic = int(number)
                     roman = USML_ARABIC_TO_ROMAN.get(arabic, "")
-                except ValueError:
-                    raise ValueError(f"Invalid USML category: '{number}'")
+                except ValueError as err:
+                    raise ValueError(f"Invalid USML category: '{number}'") from err
         else:
             arabic = number
             roman = USML_ARABIC_TO_ROMAN.get(arabic, "")

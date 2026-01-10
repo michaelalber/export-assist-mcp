@@ -13,6 +13,7 @@ A FastMCP-based Model Context Protocol server providing AI assistant capabilitie
 - **Document Processing**: pypdf, python-docx, unstructured
 - **HTTP Client**: httpx (async)
 - **Testing**: pytest, pytest-asyncio
+- **Linting**: Ruff (linting + formatting)
 
 ## Architecture
 
@@ -121,6 +122,21 @@ uv run python scripts/update_sanctions.py
 
 # Run tests
 uv run pytest
+
+# Run tests with coverage
+uv run pytest --cov=src --cov-report=term-missing
+
+# Lint
+uv run ruff check src/ tests/
+
+# Lint and auto-fix
+uv run ruff check --fix src/ tests/
+
+# Format code
+uv run ruff format src/ tests/
+
+# Format check (CI)
+uv run ruff format --check src/ tests/
 
 # Type checking
 uv run mypy src/

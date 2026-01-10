@@ -7,7 +7,7 @@ API Documentation: https://www.federalregister.gov/developers/documentation/api/
 """
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Any
 
 import httpx
@@ -233,7 +233,9 @@ class FederalRegisterService:
             document_type=document_type,
             summary=abstract[:500] if abstract else "",
             docket_number=doc.get("docket_ids", [None])[0] if doc.get("docket_ids") else None,
-            rin=doc.get("regulation_id_numbers", [None])[0] if doc.get("regulation_id_numbers") else None,
+            rin=doc.get("regulation_id_numbers", [None])[0]
+            if doc.get("regulation_id_numbers")
+            else None,
             affected_eccns=affected_eccns,
             affected_countries=affected_countries,
             federal_register_url=fr_url,
@@ -252,7 +254,7 @@ class FederalRegisterService:
         for match in matches:
             eccns.add(match.upper())
 
-        return sorted(list(eccns))
+        return sorted(eccns)
 
     def _extract_countries(self, text: str) -> list[str]:
         """Extract country references from text."""
@@ -277,7 +279,7 @@ class FederalRegisterService:
                     countries.add(code)
                     break
 
-        return sorted(list(countries))
+        return sorted(countries)
 
     async def get_recent_bis_updates(self, days: int = 30) -> list[FederalRegisterNotice]:
         """Get recent BIS (Bureau of Industry and Security) updates."""

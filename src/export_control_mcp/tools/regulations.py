@@ -9,10 +9,8 @@ from export_control_mcp.models.regulations import (
     ECCN,
     JurisdictionAnalysis,
     RegulationType,
-    USMLCategory,
 )
 from export_control_mcp.resources.reference_data import (
-    CONTROL_REASONS,
     LICENSE_EXCEPTIONS,
     get_country_groups,
     get_eccn,
@@ -351,9 +349,19 @@ async def compare_jurisdictions(
 
     # Check for military/defense keywords suggesting ITAR
     military_keywords = [
-        "military", "defense", "weapon", "munition", "combat",
-        "tactical", "warfighting", "ordnance", "ammunition",
-        "missile", "spacecraft", "satellite", "classified",
+        "military",
+        "defense",
+        "weapon",
+        "munition",
+        "combat",
+        "tactical",
+        "warfighting",
+        "ordnance",
+        "ammunition",
+        "missile",
+        "spacecraft",
+        "satellite",
+        "classified",
     ]
     description_lower = item_description.lower()
 
@@ -363,8 +371,14 @@ async def compare_jurisdictions(
 
     # Check for commercial/dual-use keywords suggesting EAR
     commercial_keywords = [
-        "commercial", "civilian", "industrial", "consumer",
-        "telecommunications", "computer", "software", "encryption",
+        "commercial",
+        "civilian",
+        "industrial",
+        "consumer",
+        "telecommunications",
+        "computer",
+        "software",
+        "encryption",
     ]
 
     for keyword in commercial_keywords:
@@ -412,16 +426,16 @@ async def compare_jurisdictions(
     reasoning_parts = []
     if itar_indicators:
         reasoning_parts.append(
-            f"ITAR indicators ({len(itar_indicators)}): "
-            + "; ".join(itar_indicators[:3])
+            f"ITAR indicators ({len(itar_indicators)}): " + "; ".join(itar_indicators[:3])
         )
     if ear_indicators:
         reasoning_parts.append(
-            f"EAR indicators ({len(ear_indicators)}): "
-            + "; ".join(ear_indicators[:3])
+            f"EAR indicators ({len(ear_indicators)}): " + "; ".join(ear_indicators[:3])
         )
 
-    reasoning = " | ".join(reasoning_parts) if reasoning_parts else "Insufficient information for analysis."
+    reasoning = (
+        " | ".join(reasoning_parts) if reasoning_parts else "Insufficient information for analysis."
+    )
 
     # Recommended next steps
     next_steps = [

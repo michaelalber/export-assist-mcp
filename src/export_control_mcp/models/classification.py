@@ -157,9 +157,7 @@ class LicenseExceptionCheck(BaseModel):
 
     exception_code: str = Field(..., description="License exception code (e.g., 'LVS', 'TMP')")
     exception_name: str = Field(..., description="Full name of the license exception")
-    eligibility: LicenseExceptionEligibility = Field(
-        ..., description="Eligibility determination"
-    )
+    eligibility: LicenseExceptionEligibility = Field(..., description="Eligibility determination")
     reason: str = Field(default="", description="Explanation of the eligibility determination")
     conditions: list[str] = Field(
         default_factory=list,
@@ -177,7 +175,9 @@ class LicenseExceptionEvaluation(BaseModel):
     eccn: str = Field(..., description="ECCN of the item being exported")
     destination_country: str = Field(..., description="Destination country code or name")
     end_use: str = Field(default="", description="Intended end-use of the item")
-    end_user_type: str = Field(default="", description="Type of end-user (commercial, government, etc.)")
+    end_user_type: str = Field(
+        default="", description="Type of end-user (commercial, government, etc.)"
+    )
     exceptions_checked: list[LicenseExceptionCheck] = Field(
         default_factory=list,
         description="Results of checking each potentially applicable license exception",

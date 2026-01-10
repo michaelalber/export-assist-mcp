@@ -173,7 +173,7 @@ class ECFRIngestor(BaseIngestor):
             # Store chunks in batches
             await self._store_chunks(chunks, result)
 
-            result.sections_ingested = len(set(c.part for c in chunks))
+            result.sections_ingested = len({c.part for c in chunks})
 
         except Exception as e:
             result.errors.append(f"XML parsing error: {e}")
@@ -274,9 +274,11 @@ class ECFRIngestor(BaseIngestor):
                 if part_match:
                     # Save previous part if exists
                     if current_part and current_text:
-                        chunks.extend(self._chunk_part_content(
-                            current_part, parts, cfr_title, "\n".join(current_text)
-                        ))
+                        chunks.extend(
+                            self._chunk_part_content(
+                                current_part, parts, cfr_title, "\n".join(current_text)
+                            )
+                        )
 
                     current_part = int(part_match.group(1))
                     current_text = [text]
@@ -289,9 +291,9 @@ class ECFRIngestor(BaseIngestor):
 
         # Don't forget the last part
         if current_part and current_text:
-            chunks.extend(self._chunk_part_content(
-                current_part, parts, cfr_title, "\n".join(current_text)
-            ))
+            chunks.extend(
+                self._chunk_part_content(current_part, parts, cfr_title, "\n".join(current_text))
+            )
 
         return chunks
 
@@ -416,9 +418,7 @@ async def ingest_all_regulations(
 
     # Ingest EAR
     logger.info("Ingesting EAR from eCFR...")
-    ear_ingestor = ECFRIngestor(
-        embedding_service, vector_store, RegulationType.EAR
-    )
+    ear_ingestor = ECFRIngestor(embedding_service, vector_store, RegulationType.EAR)
     ear_result = await ear_ingestor.ingest_from_ecfr(force_download)
     results["ear"] = {
         "sections_ingested": ear_result.sections_ingested,
@@ -428,9 +428,7 @@ async def ingest_all_regulations(
 
     # Ingest ITAR
     logger.info("Ingesting ITAR from eCFR...")
-    itar_ingestor = ECFRIngestor(
-        embedding_service, vector_store, RegulationType.ITAR
-    )
+    itar_ingestor = ECFRIngestor(embedding_service, vector_store, RegulationType.ITAR)
     itar_result = await itar_ingestor.ingest_from_ecfr(force_download)
     results["itar"] = {
         "sections_ingested": itar_result.sections_ingested,

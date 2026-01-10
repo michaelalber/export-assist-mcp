@@ -7,7 +7,9 @@ import pytest
 class TestSearchEAR:
     """Tests for search_ear tool."""
 
-    async def test_search_ear_returns_results(self, rag_service, embedding_service, sample_ear_chunk):
+    async def test_search_ear_returns_results(
+        self, rag_service, embedding_service, sample_ear_chunk
+    ):
         """Test that search_ear returns relevant results."""
         # First populate the store
         embedding = embedding_service.embed(sample_ear_chunk.to_embedding_text())
@@ -22,7 +24,9 @@ class TestSearchEAR:
         assert len(results) > 0
         assert results[0].chunk.regulation_type.value == "ear"
 
-    async def test_search_ear_with_part_filter(self, rag_service, embedding_service, sample_ear_chunk):
+    async def test_search_ear_with_part_filter(
+        self, rag_service, embedding_service, sample_ear_chunk
+    ):
         """Test filtering by EAR part."""
         embedding = embedding_service.embed(sample_ear_chunk.to_embedding_text())
         rag_service._vector_store.add_chunk(sample_ear_chunk, embedding)
@@ -51,7 +55,9 @@ class TestSearchEAR:
 class TestSearchITAR:
     """Tests for search_itar tool."""
 
-    async def test_search_itar_returns_results(self, rag_service, embedding_service, sample_itar_chunk):
+    async def test_search_itar_returns_results(
+        self, rag_service, embedding_service, sample_itar_chunk
+    ):
         """Test that search_itar returns relevant results."""
         embedding = embedding_service.embed(sample_itar_chunk.to_embedding_text())
         rag_service._vector_store.add_chunk(sample_itar_chunk, embedding)
@@ -69,7 +75,9 @@ class TestSearchITAR:
 class TestSearchBoth:
     """Tests for searching both EAR and ITAR."""
 
-    async def test_search_returns_both_types(self, rag_service, embedding_service, sample_ear_chunk, sample_itar_chunk):
+    async def test_search_returns_both_types(
+        self, rag_service, embedding_service, sample_ear_chunk, sample_itar_chunk
+    ):
         """Test that search without filter returns both types."""
         chunks = [sample_ear_chunk, sample_itar_chunk]
         texts = [c.to_embedding_text() for c in chunks]

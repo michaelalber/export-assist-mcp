@@ -116,7 +116,9 @@ class EARIngestor(BaseIngestor):
 
             # Try to detect which EAR part this is
             part_number = self._detect_ear_part(pdf_path.stem, full_text)
-            part_title = EAR_PARTS.get(part_number, "Unknown Part") if part_number else "Unknown Part"
+            part_title = (
+                EAR_PARTS.get(part_number, "Unknown Part") if part_number else "Unknown Part"
+            )
 
             metadata = ChunkMetadata(
                 part=f"Part {part_number}" if part_number else "Unknown",
@@ -160,7 +162,9 @@ class EARIngestor(BaseIngestor):
 
             # Detect EAR part
             part_number = self._detect_ear_part(html_path.stem, content)
-            part_title = EAR_PARTS.get(part_number, "Unknown Part") if part_number else "Unknown Part"
+            part_title = (
+                EAR_PARTS.get(part_number, "Unknown Part") if part_number else "Unknown Part"
+            )
 
             metadata = ChunkMetadata(
                 part=f"Part {part_number}" if part_number else "Unknown",

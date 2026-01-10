@@ -29,9 +29,7 @@ class EmbeddingService:
             try:
                 self._model = SentenceTransformer(self._model_name)
             except Exception as e:
-                raise EmbeddingError(
-                    f"Failed to load model '{self._model_name}': {e}"
-                ) from e
+                raise EmbeddingError(f"Failed to load model '{self._model_name}': {e}") from e
         return self._model
 
     @property

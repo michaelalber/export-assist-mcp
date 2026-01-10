@@ -6,7 +6,6 @@ import pytest
 
 from export_control_mcp.models.classification import FederalRegisterNotice
 
-
 # Sample notices for mocking Federal Register API
 MOCK_NOTICES = [
     FederalRegisterNotice(
@@ -41,9 +40,7 @@ class TestSuggestClassification:
         from export_control_mcp.tools.classification import suggest_classification
 
         func = suggest_classification.fn
-        result = await func(
-            "Military weapon system with combat targeting and guidance"
-        )
+        result = await func("Military weapon system with combat targeting and guidance")
 
         assert "suggested_jurisdiction" in result
         assert result["suggested_jurisdiction"] in ["ITAR", "dual_use"]
@@ -57,9 +54,7 @@ class TestSuggestClassification:
         from export_control_mcp.tools.classification import suggest_classification
 
         func = suggest_classification.fn
-        result = await func(
-            "Commercial telecommunications equipment for consumer use"
-        )
+        result = await func("Commercial telecommunications equipment for consumer use")
 
         assert "suggested_jurisdiction" in result
         assert result["suggested_jurisdiction"] in ["EAR", "EAR99"]
@@ -98,9 +93,7 @@ class TestSuggestClassification:
         from export_control_mcp.tools.classification import suggest_classification
 
         func = suggest_classification.fn
-        result = await func(
-            "Software with encryption capabilities for network security"
-        )
+        result = await func("Software with encryption capabilities for network security")
 
         assert "suggested_jurisdiction" in result
         assert "suggested_eccns" in result
@@ -260,8 +253,7 @@ class TestCheckLicenseException:
         assert "exceptions_checked" in result
         # Some exceptions should be marked not eligible for China
         not_eligible = [
-            e for e in result["exceptions_checked"]
-            if e["eligibility"] == "not_eligible"
+            e for e in result["exceptions_checked"] if e["eligibility"] == "not_eligible"
         ]
         assert len(not_eligible) > 0
 

@@ -12,7 +12,6 @@ from export_control_mcp.models.sanctions import (
 from export_control_mcp.server import mcp
 from export_control_mcp.services import get_sanctions_db
 
-
 # Country sanctions data (preloaded for common queries)
 COUNTRY_SANCTIONS_DATA: dict[str, CountrySanctions] = {
     "IR": CountrySanctions(
@@ -432,7 +431,7 @@ async def check_country_sanctions(country: str) -> dict:
         return result.to_dict()
 
     # Check preloaded data by name
-    for code, sanctions in COUNTRY_SANCTIONS_DATA.items():
+    for _code, sanctions in COUNTRY_SANCTIONS_DATA.items():
         if country.lower() in sanctions.country_name.lower():
             return sanctions.to_dict()
 

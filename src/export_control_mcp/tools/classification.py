@@ -23,30 +23,103 @@ from export_control_mcp.resources.reference_data import (
 )
 from export_control_mcp.server import mcp
 
-
 # Keywords that suggest ITAR jurisdiction
 ITAR_KEYWORDS = [
-    "military", "defense", "weapon", "munition", "ordnance", "missile",
-    "rocket", "torpedo", "bomb", "grenade", "warship", "tank", "armored",
-    "combat", "soldier", "troop", "army", "navy", "air force", "marine",
-    "classified", "secret", "top secret", "confidential", "spacecraft",
-    "satellite", "directed energy", "laser weapon", "nuclear weapon",
-    "biological agent", "chemical agent", "toxin", "firearms", "ammunition",
-    "silencer", "suppressor", "night vision", "thermal imaging", "infrared",
-    "cryptographic", "stealth", "radar", "sonar", "torpedo", "submarine",
-    "unmanned aerial vehicle", "uav", "drone", "surveillance", "reconnaissance",
+    "military",
+    "defense",
+    "weapon",
+    "munition",
+    "ordnance",
+    "missile",
+    "rocket",
+    "torpedo",
+    "bomb",
+    "grenade",
+    "warship",
+    "tank",
+    "armored",
+    "combat",
+    "soldier",
+    "troop",
+    "army",
+    "navy",
+    "air force",
+    "marine",
+    "classified",
+    "secret",
+    "top secret",
+    "confidential",
+    "spacecraft",
+    "satellite",
+    "directed energy",
+    "laser weapon",
+    "nuclear weapon",
+    "biological agent",
+    "chemical agent",
+    "toxin",
+    "firearms",
+    "ammunition",
+    "silencer",
+    "suppressor",
+    "night vision",
+    "thermal imaging",
+    "infrared",
+    "cryptographic",
+    "stealth",
+    "radar",
+    "sonar",
+    "torpedo",
+    "submarine",
+    "unmanned aerial vehicle",
+    "uav",
+    "drone",
+    "surveillance",
+    "reconnaissance",
 ]
 
 # Keywords that suggest EAR jurisdiction (dual-use)
 EAR_KEYWORDS = [
-    "commercial", "industrial", "semiconductor", "integrated circuit",
-    "computer", "software", "telecommunications", "network", "encryption",
-    "laser", "sensor", "navigation", "gps", "inertial", "accelerometer",
-    "gyroscope", "thermal", "camera", "imaging", "spectrometer", "mass spectrometer",
-    "centrifuge", "vacuum", "composite", "carbon fiber", "titanium", "maraging steel",
-    "machine tool", "cnc", "3d printer", "additive manufacturing",
-    "chemical", "precursor", "biological", "pathogen", "toxin",
-    "nuclear", "reactor", "enrichment", "gas turbine", "rocket engine",
+    "commercial",
+    "industrial",
+    "semiconductor",
+    "integrated circuit",
+    "computer",
+    "software",
+    "telecommunications",
+    "network",
+    "encryption",
+    "laser",
+    "sensor",
+    "navigation",
+    "gps",
+    "inertial",
+    "accelerometer",
+    "gyroscope",
+    "thermal",
+    "camera",
+    "imaging",
+    "spectrometer",
+    "mass spectrometer",
+    "centrifuge",
+    "vacuum",
+    "composite",
+    "carbon fiber",
+    "titanium",
+    "maraging steel",
+    "machine tool",
+    "cnc",
+    "3d printer",
+    "additive manufacturing",
+    "chemical",
+    "precursor",
+    "biological",
+    "pathogen",
+    "toxin",
+    "nuclear",
+    "reactor",
+    "enrichment",
+    "gas turbine",
+    "rocket engine",
 ]
 
 # ECCN category keywords for suggesting classifications
@@ -54,9 +127,24 @@ ECCN_CATEGORY_KEYWORDS = {
     0: ["nuclear", "reactor", "enrichment", "uranium", "plutonium", "deuterium", "tritium"],
     1: ["chemical", "precursor", "biological", "pathogen", "toxin", "composite", "alloy", "fiber"],
     2: ["machine tool", "cnc", "manufacturing", "processing", "casting", "forging", "welding"],
-    3: ["electronic", "semiconductor", "integrated circuit", "microprocessor", "fpga", "asic", "rf"],
+    3: [
+        "electronic",
+        "semiconductor",
+        "integrated circuit",
+        "microprocessor",
+        "fpga",
+        "asic",
+        "rf",
+    ],
     4: ["computer", "digital", "processor", "storage", "memory", "server", "supercomputer"],
-    5: ["telecommunications", "encryption", "cryptography", "network", "wireless", "satellite comm"],
+    5: [
+        "telecommunications",
+        "encryption",
+        "cryptography",
+        "network",
+        "wireless",
+        "satellite comm",
+    ],
     6: ["sensor", "laser", "camera", "imaging", "optical", "infrared", "thermal", "spectrometer"],
     7: ["navigation", "inertial", "gps", "gyroscope", "accelerometer", "altimeter", "avionics"],
     8: ["marine", "submarine", "underwater", "sonar", "propeller", "hull"],
@@ -134,10 +222,14 @@ async def suggest_classification(
     # Determine likely jurisdiction
     if itar_score > ear_score * 2:
         jurisdiction = JurisdictionType.ITAR
-        confidence = ClassificationConfidence.MEDIUM if itar_score >= 3 else ClassificationConfidence.LOW
+        confidence = (
+            ClassificationConfidence.MEDIUM if itar_score >= 3 else ClassificationConfidence.LOW
+        )
     elif ear_score > itar_score * 2:
         jurisdiction = JurisdictionType.EAR
-        confidence = ClassificationConfidence.MEDIUM if ear_score >= 3 else ClassificationConfidence.LOW
+        confidence = (
+            ClassificationConfidence.MEDIUM if ear_score >= 3 else ClassificationConfidence.LOW
+        )
     elif itar_score > 0 and ear_score > 0:
         jurisdiction = JurisdictionType.DUAL_USE
         confidence = ClassificationConfidence.LOW
@@ -153,7 +245,7 @@ async def suggest_classification(
     if analysis["category_matches"]:
         for category in sorted(analysis["category_matches"].keys()):
             # Look for ECCNs in this category from our reference data
-            for eccn in ECCN_DATA.keys():
+            for eccn in ECCN_DATA:
                 if eccn.startswith(str(category)):
                     suggested_eccns.append(eccn)
                     if len(suggested_eccns) >= 5:
@@ -176,21 +268,29 @@ async def suggest_classification(
     # Build key factors
     key_factors = []
     if analysis["itar_keywords"]:
-        key_factors.append(f"ITAR-related terms detected: {', '.join(analysis['itar_keywords'][:5])}")
+        key_factors.append(
+            f"ITAR-related terms detected: {', '.join(analysis['itar_keywords'][:5])}"
+        )
     if analysis["ear_keywords"]:
-        key_factors.append(f"Dual-use/EAR terms detected: {', '.join(analysis['ear_keywords'][:5])}")
+        key_factors.append(
+            f"Dual-use/EAR terms detected: {', '.join(analysis['ear_keywords'][:5])}"
+        )
     if analysis["category_matches"]:
-        cats = [f"Category {c}" for c in analysis["category_matches"].keys()]
+        cats = [f"Category {c}" for c in analysis["category_matches"]]
         key_factors.append(f"Potentially relevant ECCN categories: {', '.join(cats)}")
 
     # Build reasoning
     reasoning_parts = []
     if jurisdiction == JurisdictionType.ITAR:
-        reasoning_parts.append("Item appears to be primarily designed for military/defense applications.")
+        reasoning_parts.append(
+            "Item appears to be primarily designed for military/defense applications."
+        )
     elif jurisdiction == JurisdictionType.DUAL_USE:
         reasoning_parts.append("Item has both commercial and potential military applications.")
     elif jurisdiction == JurisdictionType.EAR:
-        reasoning_parts.append("Item appears to be a dual-use commercial item potentially controlled under EAR.")
+        reasoning_parts.append(
+            "Item appears to be a dual-use commercial item potentially controlled under EAR."
+        )
     else:
         reasoning_parts.append("Item does not appear to match specific control list entries.")
 
@@ -329,7 +429,7 @@ async def classification_decision_tree(
     step = max(1, min(step, len(decision_steps)))
 
     current = decision_steps[step - 1]
-    completed = decision_steps[:step - 1]
+    completed = decision_steps[: step - 1]
 
     # Determine if we've reached a conclusion
     is_complete = step > len(decision_steps)
@@ -409,7 +509,7 @@ async def check_license_exception(
     # Evaluate each potentially applicable exception
     exceptions_checked = []
 
-    for exc_code in LICENSE_EXCEPTIONS.keys():
+    for exc_code in LICENSE_EXCEPTIONS:
         exc_info = LICENSE_EXCEPTIONS[exc_code]
 
         eligibility = LicenseExceptionEligibility.NOT_APPLICABLE
@@ -420,7 +520,7 @@ async def check_license_exception(
         if exc_code in available_exceptions:
             if is_embargoed:
                 eligibility = LicenseExceptionEligibility.NOT_ELIGIBLE
-                reason = f"License exceptions generally not available to embargoed countries"
+                reason = "License exceptions generally not available to embargoed countries"
                 restrictions = [f"Country {dest_upper} is subject to comprehensive embargo"]
             elif is_restricted and exc_code in ["LVS", "GBS", "CIV"]:
                 eligibility = LicenseExceptionEligibility.NOT_ELIGIBLE
@@ -487,8 +587,10 @@ async def check_license_exception(
 
     # Determine recommendation
     eligible_exceptions = [
-        e for e in exceptions_checked
-        if e.eligibility in [LicenseExceptionEligibility.ELIGIBLE, LicenseExceptionEligibility.MAYBE_ELIGIBLE]
+        e
+        for e in exceptions_checked
+        if e.eligibility
+        in [LicenseExceptionEligibility.ELIGIBLE, LicenseExceptionEligibility.MAYBE_ELIGIBLE]
     ]
 
     recommended = None
@@ -600,6 +702,7 @@ async def get_recent_updates(
     except Exception as e:
         # Log error and return empty list
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"Error fetching from Federal Register API: {e}")
         return []

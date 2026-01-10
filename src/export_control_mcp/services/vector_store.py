@@ -40,9 +40,7 @@ class VectorStoreService:
     def _get_collection(self, regulation_type: RegulationType) -> Collection:
         """Get or create a collection for the given regulation type."""
         collection_name = (
-            self.EAR_COLLECTION
-            if regulation_type == RegulationType.EAR
-            else self.ITAR_COLLECTION
+            self.EAR_COLLECTION if regulation_type == RegulationType.EAR else self.ITAR_COLLECTION
         )
 
         if collection_name not in self._collections:
@@ -109,8 +107,7 @@ class VectorStoreService:
         """
         if len(chunks) != len(embeddings):
             raise ValueError(
-                f"Chunks ({len(chunks)}) and embeddings ({len(embeddings)}) "
-                "must have same length"
+                f"Chunks ({len(chunks)}) and embeddings ({len(embeddings)}) must have same length"
             )
 
         if not chunks:

@@ -100,7 +100,9 @@ class TestSearchEntityList:
         """Test searching Entity List by name."""
         from export_control_mcp.tools.sanctions import search_entity_list
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = search_entity_list.fn
             results = await func("Sample Technology")
 
@@ -111,7 +113,9 @@ class TestSearchEntityList:
         """Test searching Entity List by alias."""
         from export_control_mcp.tools.sanctions import search_entity_list
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = search_entity_list.fn
             results = await func("STC")
 
@@ -122,7 +126,9 @@ class TestSearchEntityList:
         """Test Entity List search with country filter."""
         from export_control_mcp.tools.sanctions import search_entity_list
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = search_entity_list.fn
 
             # Should find Chinese entity
@@ -137,7 +143,9 @@ class TestSearchEntityList:
         """Test fuzzy name matching."""
         from export_control_mcp.tools.sanctions import search_entity_list
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = search_entity_list.fn
             # Misspelled query
             results = await func("Sampl Technolgy", fuzzy_threshold=0.6)
@@ -153,7 +161,9 @@ class TestSearchSDNList:
         """Test searching SDN List by name."""
         from export_control_mcp.tools.sanctions import search_sdn_list
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = search_sdn_list.fn
             results = await func("Sanctioned Bank")
 
@@ -164,7 +174,9 @@ class TestSearchSDNList:
         """Test SDN search with entity type filter."""
         from export_control_mcp.tools.sanctions import search_sdn_list
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = search_sdn_list.fn
 
             # Search for entities
@@ -181,7 +193,9 @@ class TestSearchSDNList:
         """Test SDN search with program filter."""
         from export_control_mcp.tools.sanctions import search_sdn_list
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = search_sdn_list.fn
 
             # Search IRAN program
@@ -201,7 +215,9 @@ class TestSearchDeniedPersons:
         """Test searching Denied Persons by name."""
         from export_control_mcp.tools.sanctions import search_denied_persons
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = search_denied_persons.fn
             results = await func("Denied Exporter")
 
@@ -217,7 +233,9 @@ class TestCheckCountrySanctions:
         """Test checking sanctions for Iran (comprehensive embargo)."""
         from export_control_mcp.tools.sanctions import check_country_sanctions
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = check_country_sanctions.fn
             result = await func("IR")
 
@@ -231,7 +249,9 @@ class TestCheckCountrySanctions:
         """Test checking sanctions for Russia (targeted sanctions)."""
         from export_control_mcp.tools.sanctions import check_country_sanctions
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = check_country_sanctions.fn
             result = await func("Russia")
 
@@ -243,7 +263,9 @@ class TestCheckCountrySanctions:
         """Test checking sanctions for a friendly country."""
         from export_control_mcp.tools.sanctions import check_country_sanctions
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = check_country_sanctions.fn
             result = await func("Germany")
 
@@ -255,7 +277,9 @@ class TestCheckCountrySanctions:
         """Test checking sanctions for unknown country."""
         from export_control_mcp.tools.sanctions import check_country_sanctions
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = check_country_sanctions.fn
             result = await func("Nonexistent Country")
 
@@ -265,7 +289,9 @@ class TestCheckCountrySanctions:
         """Test checking sanctions using country code."""
         from export_control_mcp.tools.sanctions import check_country_sanctions
 
-        with patch("export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db):
+        with patch(
+            "export_control_mcp.tools.sanctions.get_sanctions_db", return_value=sanctions_db
+        ):
             func = check_country_sanctions.fn
             result = await func("KP")
 

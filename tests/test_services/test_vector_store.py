@@ -1,8 +1,6 @@
 """Tests for the vector store service."""
 
-import pytest
-
-from export_control_mcp.models.regulations import RegulationChunk, RegulationType
+from export_control_mcp.models.regulations import RegulationType
 
 
 class TestVectorStoreService:
@@ -16,7 +14,9 @@ class TestVectorStoreService:
         count = vector_store.count(RegulationType.EAR)
         assert count == 1
 
-    def test_add_chunks_batch(self, vector_store, embedding_service, sample_ear_chunk, sample_itar_chunk):
+    def test_add_chunks_batch(
+        self, vector_store, embedding_service, sample_ear_chunk, sample_itar_chunk
+    ):
         """Test adding multiple chunks in batch."""
         chunks = [sample_ear_chunk, sample_itar_chunk]
         texts = [c.to_embedding_text() for c in chunks]

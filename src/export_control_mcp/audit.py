@@ -6,10 +6,11 @@ to a JSONL file for compliance and audit purposes.
 
 import json
 import logging
+from collections.abc import Callable
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 from export_control_mcp.config import settings
 from export_control_mcp.models.errors import AuditLogError
@@ -174,7 +175,7 @@ def get_audit_entries(
 
     entries = []
     try:
-        with open(log_path, "r", encoding="utf-8") as f:
+        with open(log_path, encoding="utf-8") as f:
             for line in f:
                 if line.strip():
                     entry = json.loads(line)

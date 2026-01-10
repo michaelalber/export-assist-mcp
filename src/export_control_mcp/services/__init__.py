@@ -11,9 +11,9 @@ from export_control_mcp.config import settings
 
 if TYPE_CHECKING:
     from export_control_mcp.services.embeddings import EmbeddingService
-    from export_control_mcp.services.vector_store import VectorStoreService
     from export_control_mcp.services.rag import RagService
     from export_control_mcp.services.sanctions_db import SanctionsDBService
+    from export_control_mcp.services.vector_store import VectorStoreService
 
 
 @lru_cache(maxsize=1)
