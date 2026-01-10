@@ -4,15 +4,13 @@ These tests focus on the business logic in the resource module.
 MCP tool wrapper tests are in the integration test suite.
 """
 
-import pytest
-
 from export_control_mcp.resources.doe_nuclear import (
-    CFR810AuthorizationType,
     GENERALLY_AUTHORIZED_ACTIVITIES,
     GENERALLY_AUTHORIZED_DESTINATIONS,
     PROHIBITED_DESTINATIONS,
     SPECIFIC_AUTHORIZATION_ACTIVITIES,
     SPECIFIC_AUTHORIZATION_WITH_123,
+    CFR810AuthorizationType,
     get_all_generally_authorized,
     get_all_prohibited,
     get_cfr810_authorization,
@@ -131,7 +129,7 @@ class TestCFR810ReferenceData:
 
     def test_specific_authorization_activities_structure(self):
         """Verify specific authorization activity data."""
-        for key, activity in SPECIFIC_AUTHORIZATION_ACTIVITIES.items():
+        for _key, activity in SPECIFIC_AUTHORIZATION_ACTIVITIES.items():
             assert "title" in activity
             assert "description" in activity
             assert "always_requires_specific" in activity
