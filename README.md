@@ -19,10 +19,17 @@ A FastMCP-based Model Context Protocol server for National Laboratory Export Con
 - `compare_jurisdictions` - EAR vs ITAR jurisdiction analysis
 
 ### Sanctions Tools
-- `search_entity_list` - BIS Entity List search with fuzzy name matching
-- `search_sdn_list` - OFAC SDN List search
-- `search_denied_persons` - BIS Denied Persons List search
+- `search_consolidated_screening_list` - Search across 13 combined screening lists (CSL)
+- `get_csl_statistics` - Database statistics by source list
 - `check_country_sanctions` - Country-specific sanctions summary
+
+CSL includes: SDN, Entity List, Denied Persons, Unverified List, MEU List, ITAR Debarred, Nonproliferation, FSE, SSI, CAPTA, NS-MBS, NS-CMIC, NS-PLC
+
+### DOE Nuclear Tools (10 CFR 810)
+- `check_cfr810_country` - Check nuclear technology transfer authorization status
+- `list_cfr810_countries` - List Generally Authorized or Prohibited destinations
+- `get_cfr810_activities` - Get Part 810 activity categories
+- `check_cfr810_activity` - Analyze activity for authorization requirements
 
 ### Classification Tools
 - `suggest_classification` - AI-assisted ECCN/USML suggestions based on item description
@@ -50,23 +57,18 @@ uv sync
 Download and ingest official government data:
 
 ```bash
-# Ingest everything (regulations + sanctions)
+# Ingest everything (regulations + CSL)
 uv run python scripts/ingest_all.py --all
 
 # Regulations only (from eCFR)
 uv run python scripts/ingest_all.py --regulations
 
-# Sanctions lists only
+# Consolidated Screening List (13 combined lists)
 uv run python scripts/ingest_all.py --sanctions
 
 # Individual sources
 uv run python scripts/ingest_all.py --ear           # EAR only
 uv run python scripts/ingest_all.py --itar          # ITAR only
-uv run python scripts/ingest_all.py --sdn           # OFAC SDN only
-uv run python scripts/ingest_all.py --denied        # BIS Denied Persons only
-
-# BIS Entity List (requires manual download)
-uv run python scripts/ingest_all.py --entity-list /path/to/entity_list.xlsx
 
 # Load sample data for testing
 uv run python scripts/ingest_all.py --sample
@@ -78,9 +80,10 @@ uv run python scripts/ingest_all.py --sample
 |--------|-----|--------|
 | EAR | https://www.ecfr.gov (15 CFR 730-774) | XML |
 | ITAR | https://www.ecfr.gov (22 CFR 120-130) | XML |
-| OFAC SDN | https://www.treasury.gov/ofac/downloads/sdn.xml | XML |
-| BIS Denied Persons | https://www.bis.doc.gov/dpl/dpl.txt | TXT |
+| CSL | https://data.opensanctions.org (mirrors trade.gov) | JSON |
 | Federal Register | https://www.federalregister.gov/api/v1 | JSON API |
+
+The Consolidated Screening List (CSL) combines 13 government screening lists from Commerce (Entity List, Denied Persons, Unverified List, MEU List), State (ITAR Debarred, Nonproliferation), and Treasury (SDN, FSE, SSI, CAPTA, NS-MBS, NS-CMIC, NS-PLC).
 
 ## Usage
 
@@ -100,11 +103,13 @@ Add to your Claude Desktop configuration (`~/.config/claude/claude_desktop_confi
 }
 ```
 
-### SSE Transport (Web Integration)
+### Streamable HTTP Transport (Web Integration)
 
 ```bash
-uv run python -m export_control_mcp.server --transport sse --port 8000
+uv run python -m export_control_mcp.server --transport streamable-http --port 8000
 ```
+
+Connect to `http://localhost:8000/mcp` for MCP clients.
 
 ## Development
 
@@ -136,17 +141,21 @@ src/export_control_mcp/
 ├── services/                 # Backend services
 │   ├── embeddings.py         # sentence-transformers
 │   ├── vector_store.py       # ChromaDB (regulations)
-│   ├── sanctions_db.py       # SQLite + FTS5 (sanctions)
+│   ├── sanctions_db.py       # SQLite + FTS5 (sanctions + CSL)
 │   └── federal_register.py   # Federal Register API
+├── resources/                # Reference data
+│   └── doe_nuclear.py        # 10 CFR 810 country lists
 ├── tools/                    # MCP tools
 │   ├── regulations.py        # EAR/ITAR search
-│   ├── sanctions.py          # Sanctions screening
-│   └── classification.py     # Classification assistance
+│   ├── sanctions.py          # CSL screening
+│   ├── classification.py     # Classification assistance
+│   └── doe_nuclear.py        # 10 CFR 810 tools
 ├── rag/                      # RAG components
 │   └── chunking.py           # Regulation chunking
 └── data/ingest/              # Data ingestion
     ├── ecfr_ingest.py        # eCFR regulations
-    └── sanctions_ingest.py   # OFAC/BIS lists
+    ├── sanctions_ingest.py   # Legacy OFAC/BIS lists
+    └── csl_ingest.py         # Consolidated Screening List
 ```
 
 ## Environment Variables
