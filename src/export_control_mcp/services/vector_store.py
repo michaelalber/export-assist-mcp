@@ -22,11 +22,11 @@ class VectorStoreService:
             db_path: Path to the ChromaDB storage directory.
         """
         self._db_path = db_path
-        self._client: chromadb.PersistentClient | None = None
+        self._client: chromadb.ClientAPI | None = None
         self._collections: dict[str, Collection] = {}
 
     @property
-    def client(self) -> chromadb.PersistentClient:
+    def client(self) -> chromadb.ClientAPI:
         """Lazy-load and return the ChromaDB client."""
         if self._client is None:
             try:

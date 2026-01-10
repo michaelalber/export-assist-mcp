@@ -293,8 +293,8 @@ def get_cfr810_authorization(country: str) -> CFR810Country | None:
                 name=dest,
                 iso_code=COUNTRY_ISO_CODES.get(dest, ""),
                 authorization_type=CFR810AuthorizationType.SPECIFIC_AUTHORIZATION,
-                has_123_agreement=info["has_123_agreement"],
-                notes=info["notes"],
+                has_123_agreement=bool(info["has_123_agreement"]),
+                notes=str(info["notes"]),
             )
 
     # Default: Specific authorization required (not in Appendix A)

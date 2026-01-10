@@ -56,9 +56,9 @@ EAR_PARTS = {
 class EARIngestor(BaseIngestor):
     """Ingest EAR regulations from PDF or HTML sources."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: object, **kwargs: object) -> None:
         """Initialize the EAR ingestor."""
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # type: ignore[arg-type]
         self._chunker = RegulationChunker(max_tokens=512, overlap_tokens=50)
 
     @property

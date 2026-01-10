@@ -342,10 +342,10 @@ async def compare_jurisdictions(
     itar_results = await rag_service.search_itar(query=item_description, limit=5)
 
     # Analyze indicators
-    ear_indicators = []
-    itar_indicators = []
-    suggested_eccns = []
-    suggested_usml_categories = []
+    ear_indicators: list[str] = []
+    itar_indicators: list[str] = []
+    suggested_eccns: list[str] = []
+    suggested_usml_categories: list[str] = []
 
     # Check for military/defense keywords suggesting ITAR
     military_keywords = [
