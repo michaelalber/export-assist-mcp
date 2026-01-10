@@ -47,6 +47,10 @@ dependencies = [
 
     # Token counting for chunking
     "tiktoken>=0.5.0",
+
+    # Security: pin transitive dependencies to fix CVEs
+    "urllib3>=2.6.3",  # CVE-2025-50182, CVE-2025-50181, CVE-2025-66418, CVE-2025-66471, CVE-2026-21441
+    "setuptools>=78.1.1",  # PYSEC-2022-43012, PYSEC-2025-49, CVE-2024-6345
 ]
 
 [project.optional-dependencies]
