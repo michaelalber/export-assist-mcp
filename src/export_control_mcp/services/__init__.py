@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from export_control_mcp.services.embeddings import EmbeddingService
     from export_control_mcp.services.vector_store import VectorStoreService
     from export_control_mcp.services.rag import RagService
+    from export_control_mcp.services.sanctions_db import SanctionsDBService
 
 
 @lru_cache(maxsize=1)
@@ -42,8 +43,17 @@ def get_rag_service() -> "RagService":
     )
 
 
+@lru_cache(maxsize=1)
+def get_sanctions_db() -> "SanctionsDBService":
+    """Get singleton sanctions database service instance."""
+    from export_control_mcp.services.sanctions_db import SanctionsDBService
+
+    return SanctionsDBService(db_path=settings.sanctions_db_path)
+
+
 __all__ = [
     "get_embedding_service",
     "get_vector_store",
     "get_rag_service",
+    "get_sanctions_db",
 ]
