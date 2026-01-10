@@ -37,6 +37,9 @@ dependencies = [
 
     # Document Processing
     "pypdf>=3.0.0",
+    "docling>=2.0.0",  # Advanced PDF/document parsing (IBM)
+    "openpyxl>=3.1.0",  # Excel file parsing (BIS Entity List)
+    "lxml>=5.0.0",  # XML parsing (OFAC SDN, eCFR)
 
     # SQLite fuzzy matching
     "rapidfuzz>=3.0.0",

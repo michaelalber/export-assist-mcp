@@ -382,6 +382,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,jetbrains,visualstudiocode,python
 
 # Project-specific
-data/
-logs/
+/data/
+/logs/
 uv.lock

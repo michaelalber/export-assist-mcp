@@ -1,6 +1,35 @@
 """Tests for classification assistance tools."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
+
+from export_control_mcp.models.classification import FederalRegisterNotice
+
+
+# Sample notices for mocking Federal Register API
+MOCK_NOTICES = [
+    FederalRegisterNotice(
+        document_number="2024-12345",
+        title="Entity List Additions and Revisions",
+        agency="Bureau of Industry and Security",
+        publication_date="2024-01-15",
+        effective_date="2024-01-15",
+        document_type="Rule",
+        summary="BIS is amending the EAR to add entities to the Entity List.",
+        affected_countries=["CN", "RU"],
+        federal_register_url="https://www.federalregister.gov/d/2024-12345",
+    ),
+    FederalRegisterNotice(
+        document_number="2024-12346",
+        title="ITAR Amendment: Revisions to USML Categories VIII",
+        agency="Directorate of Defense Trade Controls",
+        publication_date="2024-01-05",
+        document_type="Proposed Rule",
+        summary="DDTC proposes revisions to USML Category VIII.",
+        federal_register_url="https://www.federalregister.gov/d/2024-12346",
+    ),
+]
 
 
 @pytest.mark.asyncio
@@ -245,57 +274,99 @@ class TestGetRecentUpdates:
         """Test getting all recent updates."""
         from export_control_mcp.tools.classification import get_recent_updates
 
-        func = get_recent_updates.fn
-        result = await func()
+        # Mock the Federal Register service
+        mock_service = AsyncMock()
+        mock_service.search_documents.return_value = MOCK_NOTICES
 
-        assert isinstance(result, list)
-        assert len(result) > 0
-        assert "document_number" in result[0]
-        assert "title" in result[0]
-        assert "agency" in result[0]
+        with patch(
+            "export_control_mcp.services.federal_register.get_federal_register_service",
+            return_value=mock_service,
+        ):
+            func = get_recent_updates.fn
+            result = await func()
+
+            assert isinstance(result, list)
+            assert len(result) > 0
+            assert "document_number" in result[0]
+            assert "title" in result[0]
+            assert "agency" in result[0]
 
     async def test_get_recent_updates_filter_by_agency(self):
         """Test filtering updates by agency."""
         from export_control_mcp.tools.classification import get_recent_updates
 
-        func = get_recent_updates.fn
-        result = await func(agency="BIS")
+        # Mock returns only BIS notices when filtered
+        bis_notices = [n for n in MOCK_NOTICES if "Bureau of Industry" in n.agency]
+        mock_service = AsyncMock()
+        mock_service.search_documents.return_value = bis_notices
 
-        assert isinstance(result, list)
-        for notice in result:
-            assert "Bureau of Industry and Security" in notice["agency"]
+        with patch(
+            "export_control_mcp.services.federal_register.get_federal_register_service",
+            return_value=mock_service,
+        ):
+            func = get_recent_updates.fn
+            result = await func(agency="BIS")
+
+            assert isinstance(result, list)
+            for notice in result:
+                assert "Bureau of Industry and Security" in notice["agency"]
 
     async def test_get_recent_updates_filter_by_type(self):
         """Test filtering updates by document type."""
         from export_control_mcp.tools.classification import get_recent_updates
 
-        func = get_recent_updates.fn
-        result = await func(document_type="rule")
+        # Mock returns only Rule notices when filtered
+        rule_notices = [n for n in MOCK_NOTICES if n.document_type == "Rule"]
+        mock_service = AsyncMock()
+        mock_service.search_documents.return_value = rule_notices
 
-        assert isinstance(result, list)
-        for notice in result:
-            assert notice["document_type"] == "Rule"
+        with patch(
+            "export_control_mcp.services.federal_register.get_federal_register_service",
+            return_value=mock_service,
+        ):
+            func = get_recent_updates.fn
+            result = await func(document_type="rule")
+
+            assert isinstance(result, list)
+            for notice in result:
+                assert notice["document_type"] == "Rule"
 
     async def test_get_recent_updates_ddtc(self):
         """Test filtering for DDTC updates."""
         from export_control_mcp.tools.classification import get_recent_updates
 
-        func = get_recent_updates.fn
-        result = await func(agency="DDTC")
+        # Mock returns only DDTC notices when filtered
+        ddtc_notices = [n for n in MOCK_NOTICES if "Defense Trade" in n.agency]
+        mock_service = AsyncMock()
+        mock_service.search_documents.return_value = ddtc_notices
 
-        assert isinstance(result, list)
-        for notice in result:
-            assert "Directorate of Defense Trade Controls" in notice["agency"]
+        with patch(
+            "export_control_mcp.services.federal_register.get_federal_register_service",
+            return_value=mock_service,
+        ):
+            func = get_recent_updates.fn
+            result = await func(agency="DDTC")
+
+            assert isinstance(result, list)
+            for notice in result:
+                assert "Directorate of Defense Trade Controls" in notice["agency"]
 
     async def test_get_recent_updates_includes_affected_items(self):
         """Test that updates include affected ECCNs and countries."""
         from export_control_mcp.tools.classification import get_recent_updates
 
-        func = get_recent_updates.fn
-        result = await func()
+        mock_service = AsyncMock()
+        mock_service.search_documents.return_value = MOCK_NOTICES
 
-        # At least one notice should have affected items
-        has_affected_eccns = any(len(n.get("affected_eccns", [])) > 0 for n in result)
-        has_affected_countries = any(len(n.get("affected_countries", [])) > 0 for n in result)
+        with patch(
+            "export_control_mcp.services.federal_register.get_federal_register_service",
+            return_value=mock_service,
+        ):
+            func = get_recent_updates.fn
+            result = await func()
 
-        assert has_affected_eccns or has_affected_countries
+            # At least one notice should have affected items
+            has_affected_eccns = any(len(n.get("affected_eccns", [])) > 0 for n in result)
+            has_affected_countries = any(len(n.get("affected_countries", [])) > 0 for n in result)
+
+            assert has_affected_eccns or has_affected_countries

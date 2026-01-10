@@ -10,14 +10,12 @@ from export_control_mcp.models.classification import (
     ClassificationSuggestion,
     DecisionTreeResult,
     DecisionTreeStep,
-    FederalRegisterNotice,
     JurisdictionType,
     LicenseExceptionCheck,
     LicenseExceptionEligibility,
     LicenseExceptionEvaluation,
 )
 from export_control_mcp.resources.reference_data import (
-    COUNTRY_GROUPS,
     ECCN_DATA,
     LICENSE_EXCEPTIONS,
     USML_CATEGORIES,
@@ -532,44 +530,6 @@ async def check_license_exception(
     return evaluation.to_dict()
 
 
-# Sample recent updates (in production, this would fetch from Federal Register API)
-SAMPLE_RECENT_UPDATES = [
-    FederalRegisterNotice(
-        document_number="2024-12345",
-        title="Entity List Additions and Revisions",
-        agency="Bureau of Industry and Security",
-        publication_date="2024-01-15",
-        effective_date="2024-01-15",
-        document_type="Rule",
-        summary="BIS is amending the Export Administration Regulations (EAR) to add entities to the Entity List.",
-        affected_countries=["CN", "RU"],
-        federal_register_url="https://www.federalregister.gov/d/2024-12345",
-    ),
-    FederalRegisterNotice(
-        document_number="2024-12346",
-        title="Export Control Reform: Semiconductor Manufacturing Equipment",
-        agency="Bureau of Industry and Security",
-        publication_date="2024-01-10",
-        effective_date="2024-02-01",
-        document_type="Rule",
-        summary="BIS is amending the EAR to expand controls on semiconductor manufacturing equipment.",
-        affected_eccns=["3B001", "3B002", "3B991"],
-        affected_countries=["CN"],
-        federal_register_url="https://www.federalregister.gov/d/2024-12346",
-    ),
-    FederalRegisterNotice(
-        document_number="2024-12347",
-        title="ITAR Amendment: Revisions to USML Categories VIII and XV",
-        agency="Directorate of Defense Trade Controls",
-        publication_date="2024-01-05",
-        document_type="Proposed Rule",
-        summary="DDTC proposes revisions to USML Categories VIII (Aircraft) and XV (Spacecraft).",
-        docket_number="DOS-2024-0001",
-        federal_register_url="https://www.federalregister.gov/d/2024-12347",
-    ),
-]
-
-
 @mcp.tool()
 @audit_log
 async def get_recent_updates(
@@ -580,12 +540,12 @@ async def get_recent_updates(
     """
     Get recent export control regulatory updates from the Federal Register.
 
+    Fetches real-time data from the official Federal Register API
+    (https://www.federalregister.gov/developers/documentation/api/v1).
+
     Returns summaries of recent rules, proposed rules, and notices from
     BIS, DDTC, and OFAC that may affect export control classifications
     and licensing requirements.
-
-    Note: In production, this would query the Federal Register API.
-    Currently returns sample data for demonstration.
 
     Args:
         agency: Filter by agency. Options:
@@ -613,32 +573,33 @@ async def get_recent_updates(
         - affected_countries: Countries affected (if applicable)
         - federal_register_url: Link to full document
     """
-    # In production, this would query the Federal Register API:
-    # https://www.federalregister.gov/developers/documentation/api/v1
+    from export_control_mcp.services.federal_register import get_federal_register_service
 
-    results = []
+    # Clamp days to valid range
+    days = max(1, min(365, days))
 
-    for notice in SAMPLE_RECENT_UPDATES:
-        # Filter by agency
-        if agency.lower() != "all":
-            agency_map = {
-                "bis": "Bureau of Industry and Security",
-                "ddtc": "Directorate of Defense Trade Controls",
-                "ofac": "Office of Foreign Assets Control",
-            }
-            if agency_map.get(agency.lower(), "") not in notice.agency:
-                continue
+    # Get the Federal Register service
+    fr_service = get_federal_register_service()
 
-        # Filter by document type
-        if document_type.lower() != "all":
-            type_map = {
-                "rule": "Rule",
-                "proposed": "Proposed Rule",
-                "notice": "Notice",
-            }
-            if notice.document_type != type_map.get(document_type.lower(), ""):
-                continue
+    # Determine agency filter
+    agency_filter = None if agency.lower() == "all" else agency.upper()
 
-        results.append(notice.to_dict())
+    # Determine document type filter
+    doc_type_filter = None if document_type.lower() == "all" else document_type.lower()
 
-    return results
+    # Fetch from Federal Register API
+    try:
+        notices = await fr_service.search_documents(
+            agency=agency_filter,
+            document_type=doc_type_filter,
+            days_back=days,
+        )
+
+        return [notice.to_dict() for notice in notices]
+
+    except Exception as e:
+        # Log error and return empty list
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error fetching from Federal Register API: {e}")
+        return []
