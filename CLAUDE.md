@@ -91,15 +91,20 @@ src/
 
 ```bash
 # Required
-CHROMA_PERSIST_DIR=./data/chroma
+EXPORT_CONTROL_CHROMA_PERSIST_DIR=./data/chroma
+
+# MCP Transport (stdio, streamable-http, or sse)
+EXPORT_CONTROL_MCP_TRANSPORT=stdio      # Default: stdio for Claude Desktop
+EXPORT_CONTROL_MCP_HOST=127.0.0.1       # Host for HTTP transports
+EXPORT_CONTROL_MCP_PORT=8000            # Port for HTTP transports
 
 # Optional - for external LLM (if not using local)
 OPENAI_API_KEY=           # If using OpenAI embeddings
 ANTHROPIC_API_KEY=        # If calling Claude from tools
 
 # Logging
-LOG_LEVEL=INFO
-AUDIT_LOG_PATH=./logs/audit.jsonl
+EXPORT_CONTROL_LOG_LEVEL=INFO
+EXPORT_CONTROL_AUDIT_LOG_PATH=./logs/audit.jsonl
 ```
 
 ## Development Commands
@@ -111,8 +116,8 @@ uv sync
 # Run MCP server (stdio mode for Claude Desktop)
 uv run python -m export_control_mcp.server
 
-# Run with SSE for web integration
-uv run python -m export_control_mcp.server --transport sse --port 8000
+# Run with Streamable HTTP for web integration
+EXPORT_CONTROL_MCP_TRANSPORT=streamable-http uv run python -m export_control_mcp.server
 
 # Ingest regulations
 uv run python scripts/ingest_regulations.py --source ./data/regulations/
@@ -165,8 +170,8 @@ uv run mypy src/
 ```
 
 ### .NET Application (Production)
-- Connect via SSE transport to `http://localhost:8000/sse`
-- Use MCP C# SDK or raw HTTP/SSE client
+- Connect via Streamable HTTP transport to `http://localhost:8000/mcp`
+- Use MCP C# SDK or HTTP client with streaming support
 - Pass user context in MCP request metadata for audit logging
 
 ## References
