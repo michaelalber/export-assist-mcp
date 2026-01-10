@@ -23,12 +23,18 @@ mcp = FastMCP(
     - Looking up ECCN (Export Control Classification Numbers)
     - Searching sanctions lists (Entity List, SDN, Denied Persons)
     - Getting country sanctions and country group information
+    - 10 CFR 810 country authorization lookups (DOE nuclear controls)
+    - DOE nuclear technology transfer guidance
 
     All queries are logged for audit purposes. No data leaves the network
     unless explicitly configured for external API access.
 
     For classification suggestions, always note that official classification
     requires formal commodity jurisdiction or classification requests.
+
+    For 10 CFR 810 queries, note that this provides guidance only - all
+    Part 810 activities should be reviewed by your institution's export
+    control office before proceeding.
     """,
 )
 
@@ -36,6 +42,7 @@ mcp = FastMCP(
 # These imports must happen after mcp is defined
 from export_control_mcp.tools import (  # noqa: E402
     classification,  # noqa: F401
+    doe_nuclear,  # noqa: F401
     regulations,  # noqa: F401
     sanctions,  # noqa: F401
 )
