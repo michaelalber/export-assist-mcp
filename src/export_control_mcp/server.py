@@ -34,6 +34,7 @@ mcp = FastMCP(
 
 # Import tools to register them with FastMCP via @mcp.tool() decorators
 # These imports must happen after mcp is defined
+from export_control_mcp.tools import classification  # noqa: F401, E402
 from export_control_mcp.tools import regulations  # noqa: F401, E402
 from export_control_mcp.tools import sanctions  # noqa: F401, E402
 
