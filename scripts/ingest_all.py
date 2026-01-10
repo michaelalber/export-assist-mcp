@@ -7,11 +7,13 @@ Downloads and ingests data from official government sources:
 - OFAC SDN List from Treasury
 - BIS Denied Persons List from Commerce
 - BIS Entity List (requires manual download)
+- Consolidated Screening List (CSL) from OpenSanctions/Trade.gov
 
 Usage:
-    python scripts/ingest_all.py --all           # Ingest everything
+    python scripts/ingest_all.py --all           # Ingest everything (regs + sanctions + CSL)
     python scripts/ingest_all.py --regulations   # EAR and ITAR from eCFR
     python scripts/ingest_all.py --sanctions     # SDN and Denied Persons
+    python scripts/ingest_all.py --csl           # Consolidated Screening List (13 lists)
     python scripts/ingest_all.py --ear           # EAR only
     python scripts/ingest_all.py --itar          # ITAR only
     python scripts/ingest_all.py --sdn           # OFAC SDN only
@@ -147,6 +149,24 @@ async def ingest_entity_list(excel_path: Path) -> dict:
     return result
 
 
+async def ingest_csl(force_download: bool = False) -> dict:
+    """Ingest Consolidated Screening List."""
+    from export_control_mcp.data.ingest.csl_ingest import CSLIngestor
+
+    logger.info("Ingesting Consolidated Screening List...")
+
+    db = get_sanctions_db()
+    # Clear existing CSL data
+    db.clear_csl()
+
+    ingestor = CSLIngestor(db)
+    result = await ingestor.ingest(force_download=force_download)
+
+    logger.info(f"CSL ingestion complete: {result['total_entries']} entries")
+
+    return result
+
+
 async def load_sample_data() -> dict:
     """Load sample data for testing."""
     # Import directly using sys.path which was set at the top of this file
@@ -195,6 +215,9 @@ async def ingest_all(force_download: bool = False) -> dict:
     # Ingest sanctions
     results["ofac_sdn"] = await ingest_ofac_sdn(force_download)
     results["denied_persons"] = await ingest_denied_persons(force_download)
+
+    # Ingest Consolidated Screening List
+    results["csl"] = await ingest_csl(force_download)
 
     # Load country sanctions data
     from export_control_mcp.tools.sanctions import COUNTRY_SANCTIONS_DATA
@@ -279,6 +302,11 @@ Data Sources:
         help="Path to BIS Entity List Excel file",
     )
     parser.add_argument(
+        "--csl",
+        action="store_true",
+        help="Ingest Consolidated Screening List (13 combined screening lists)",
+    )
+    parser.add_argument(
         "--sample",
         action="store_true",
         help="Load sample data for testing",
@@ -301,7 +329,7 @@ Data Sources:
     if not any([
         args.all, args.regulations, args.sanctions,
         args.ear, args.itar, args.sdn, args.denied,
-        args.entity_list, args.sample,
+        args.entity_list, args.csl, args.sample,
     ]):
         parser.print_help()
         print("\nError: No action specified. Use --all, --regulations, --sanctions, etc.")
@@ -326,6 +354,8 @@ Data Sources:
                 results["denied_persons"] = await ingest_denied_persons(args.force)
             if args.entity_list:
                 results["entity_list"] = await ingest_entity_list(Path(args.entity_list))
+            if args.csl:
+                results["csl"] = await ingest_csl(args.force)
 
         return results
 

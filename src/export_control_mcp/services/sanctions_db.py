@@ -18,7 +18,9 @@ from export_control_mcp.models.sanctions import (
 )
 
 # Valid table names for SQL queries (prevents SQL injection)
-_VALID_TABLES = frozenset(["entity_list", "sdn_list", "denied_persons", "country_sanctions"])
+_VALID_TABLES = frozenset([
+    "entity_list", "sdn_list", "denied_persons", "country_sanctions", "csl"
+])
 
 
 class SanctionsDBService:
@@ -144,6 +146,31 @@ class SanctionsDBService:
             )
         """)
 
+        # Consolidated Screening List table
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS csl (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                entry_type TEXT NOT NULL,
+                source_list TEXT NOT NULL,
+                programs TEXT DEFAULT '[]',
+                aliases TEXT DEFAULT '[]',
+                addresses TEXT DEFAULT '[]',
+                countries TEXT DEFAULT '[]',
+                remarks TEXT DEFAULT ''
+            )
+        """)
+
+        # CSL FTS5 index
+        conn.execute("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS csl_fts USING fts5(
+                name,
+                aliases,
+                content='csl',
+                content_rowid='rowid'
+            )
+        """)
+
         # Create triggers to keep FTS indices in sync
         conn.executescript("""
             CREATE TRIGGER IF NOT EXISTS entity_list_ai AFTER INSERT ON entity_list BEGIN
@@ -195,6 +222,23 @@ class SanctionsDBService:
                 VALUES('delete', old.rowid, old.name);
                 INSERT INTO denied_persons_fts(rowid, name)
                 VALUES (new.rowid, new.name);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS csl_ai AFTER INSERT ON csl BEGIN
+                INSERT INTO csl_fts(rowid, name, aliases)
+                VALUES (new.rowid, new.name, new.aliases);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS csl_ad AFTER DELETE ON csl BEGIN
+                INSERT INTO csl_fts(csl_fts, rowid, name, aliases)
+                VALUES('delete', old.rowid, old.name, old.aliases);
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS csl_au AFTER UPDATE ON csl BEGIN
+                INSERT INTO csl_fts(csl_fts, rowid, name, aliases)
+                VALUES('delete', old.rowid, old.name, old.aliases);
+                INSERT INTO csl_fts(rowid, name, aliases)
+                VALUES (new.rowid, new.name, new.aliases);
             END;
         """)
 
@@ -711,6 +755,180 @@ class SanctionsDBService:
             notes=json.loads(row["notes"]),
         )
 
+    # --- CSL Operations ---
+
+    def add_csl_entry(
+        self,
+        entry_id: str,
+        name: str,
+        entry_type: str,
+        source_list: str,
+        programs: list[str] | None = None,
+        aliases: list[str] | None = None,
+        addresses: list[str] | None = None,
+        countries: list[str] | None = None,
+        remarks: str = "",
+    ) -> None:
+        """Add an entry to the Consolidated Screening List."""
+        conn = self._get_connection()
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO csl
+            (id, name, entry_type, source_list, programs, aliases, addresses, countries, remarks)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                entry_id,
+                name,
+                entry_type,
+                source_list,
+                json.dumps(programs or []),
+                json.dumps(aliases or []),
+                json.dumps(addresses or []),
+                json.dumps(countries or []),
+                remarks,
+            ),
+        )
+        conn.commit()
+
+    def search_csl(
+        self,
+        query: str,
+        source_list: str | None = None,
+        country: str | None = None,
+        fuzzy_threshold: float = 0.7,
+        limit: int = 20,
+    ) -> list[dict]:
+        """Search the Consolidated Screening List.
+
+        Args:
+            query: Name or partial name to search for
+            source_list: Optional filter by source list code
+            country: Optional filter by country
+            fuzzy_threshold: Minimum fuzzy match score (0-1)
+            limit: Maximum results to return
+
+        Returns:
+            List of matching entries with scores
+        """
+        conn = self._get_connection()
+        results = []
+
+        # First try FTS5 match
+        fts_query = query.replace('"', '""')
+        sql = """
+            SELECT c.*, csl_fts.rank
+            FROM csl c
+            JOIN csl_fts ON c.rowid = csl_fts.rowid
+            WHERE csl_fts MATCH ?
+        """
+        params: list = [f'"{fts_query}"']
+
+        if source_list:
+            sql += " AND c.source_list = ?"
+            params.append(source_list)
+
+        sql += " ORDER BY rank LIMIT ?"
+        params.append(limit * 2)
+
+        cursor = conn.execute(sql, params)
+        seen_ids = set()
+
+        for row in cursor:
+            entry = self._row_to_csl_dict(row)
+            countries_list = json.loads(row["countries"]) if row["countries"] else []
+
+            # Apply country filter if specified
+            if country and country.upper() not in [c.upper() for c in countries_list]:
+                continue
+
+            score = fuzz.ratio(query.lower(), row["name"].lower()) / 100.0
+            entry["match_score"] = score
+            entry["match_type"] = "fts_match"
+            results.append(entry)
+            seen_ids.add(row["id"])
+
+        # Fuzzy search if needed
+        if len(results) < limit:
+            sql = "SELECT * FROM csl"
+            conditions = []
+            params = []
+
+            if source_list:
+                conditions.append("source_list = ?")
+                params.append(source_list)
+
+            if conditions:
+                sql += " WHERE " + " AND ".join(conditions)
+
+            cursor = conn.execute(sql, params)
+
+            for row in cursor:
+                if row["id"] in seen_ids:
+                    continue
+
+                countries_list = json.loads(row["countries"]) if row["countries"] else []
+                if country and country.upper() not in [c.upper() for c in countries_list]:
+                    continue
+
+                # Check name
+                name_score = fuzz.ratio(query.lower(), row["name"].lower()) / 100.0
+                if name_score >= fuzzy_threshold:
+                    entry = self._row_to_csl_dict(row)
+                    entry["match_score"] = name_score
+                    entry["match_type"] = "fuzzy_name"
+                    results.append(entry)
+                    seen_ids.add(row["id"])
+                    continue
+
+                # Check aliases
+                aliases = json.loads(row["aliases"]) if row["aliases"] else []
+                for alias in aliases:
+                    alias_score = fuzz.ratio(query.lower(), alias.lower()) / 100.0
+                    if alias_score >= fuzzy_threshold:
+                        entry = self._row_to_csl_dict(row)
+                        entry["match_score"] = alias_score
+                        entry["match_type"] = "alias"
+                        entry["matched_alias"] = alias
+                        results.append(entry)
+                        seen_ids.add(row["id"])
+                        break
+
+        # Sort by score and limit
+        results.sort(key=lambda r: r.get("match_score", 0), reverse=True)
+        return results[:limit]
+
+    def _row_to_csl_dict(self, row: sqlite3.Row) -> dict:
+        """Convert database row to CSL dictionary."""
+        return {
+            "id": row["id"],
+            "name": row["name"],
+            "entry_type": row["entry_type"],
+            "source_list": row["source_list"],
+            "programs": json.loads(row["programs"]) if row["programs"] else [],
+            "aliases": json.loads(row["aliases"]) if row["aliases"] else [],
+            "addresses": json.loads(row["addresses"]) if row["addresses"] else [],
+            "countries": json.loads(row["countries"]) if row["countries"] else [],
+            "remarks": row["remarks"],
+        }
+
+    def clear_csl(self) -> None:
+        """Clear all CSL data."""
+        conn = self._get_connection()
+        conn.execute("DELETE FROM csl")
+        conn.commit()
+
+    def get_csl_stats(self) -> dict:
+        """Get CSL statistics by source list."""
+        conn = self._get_connection()
+        cursor = conn.execute("""
+            SELECT source_list, COUNT(*) as count
+            FROM csl
+            GROUP BY source_list
+            ORDER BY count DESC
+        """)
+        return {row["source_list"]: row["count"] for row in cursor}
+
     # --- Utility Operations ---
 
     def clear_all(self) -> None:
@@ -721,6 +939,7 @@ class SanctionsDBService:
             DELETE FROM sdn_list;
             DELETE FROM denied_persons;
             DELETE FROM country_sanctions;
+            DELETE FROM csl;
         """)
         conn.commit()
 

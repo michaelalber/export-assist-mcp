@@ -439,3 +439,136 @@ async def check_country_sanctions(country: str) -> dict:
         "error": f"Country '{country}' not found in sanctions database.",
         "suggestion": "Try using the full country name or ISO 3166-1 alpha-2 code.",
     }
+
+
+# CSL source list codes for filtering
+CSL_SOURCE_LISTS = {
+    "entity_list": "BIS Entity List",
+    "denied_persons": "BIS Denied Persons List",
+    "unverified_list": "BIS Unverified List",
+    "meu_list": "BIS Military End User List",
+    "sdn": "OFAC SDN List",
+    "itar_debarred": "ITAR Debarred List",
+    "nonproliferation": "Nonproliferation Sanctions",
+    "ns_cmic": "NS Chinese Military-Industrial Complex",
+    "capta": "CAPTA List",
+    "fse": "Foreign Sanctions Evaders",
+    "ssi": "Sectoral Sanctions",
+}
+
+
+@mcp.tool()
+@audit_log
+async def search_consolidated_screening_list(
+    query: str,
+    source_list: str | None = None,
+    country: str | None = None,
+    fuzzy_threshold: float = 0.7,
+    limit: int = 20,
+) -> list[dict]:
+    """
+    Search the Consolidated Screening List (CSL) for restricted parties.
+
+    The CSL combines 13 export screening lists from Commerce, State, and Treasury:
+    - BIS: Entity List, Denied Persons, Unverified List, Military End User List
+    - State: ITAR Debarred, Nonproliferation Sanctions
+    - Treasury: SDN, FSE, SSI, CAPTA, NS-MBS, NS-CMIC, NS-PLC
+
+    Use this for comprehensive screening of potential transaction parties across
+    all major U.S. government restricted party lists in a single search.
+
+    Args:
+        query: Name or partial name to search for. Examples:
+            - "Huawei"
+            - "China Telecom"
+            - "Bank of Kunlun"
+        source_list: Optional filter by source list code. Valid codes:
+            - "entity_list" - BIS Entity List
+            - "denied_persons" - BIS Denied Persons List
+            - "unverified_list" - BIS Unverified List
+            - "meu_list" - BIS Military End User List
+            - "sdn" - OFAC SDN List
+            - "itar_debarred" - ITAR Debarred List
+            - "nonproliferation" - Nonproliferation Sanctions
+            - "ns_cmic" - NS Chinese Military-Industrial Complex Companies
+            - "capta" - CAPTA List
+            Leave empty to search all lists.
+        country: Optional ISO 3166-1 alpha-2 country code filter (e.g., "CN", "RU")
+        fuzzy_threshold: Minimum fuzzy match score (0.0-1.0, default 0.7).
+            Lower values return more results but may include false positives.
+        limit: Maximum number of results to return (1-100, default 20).
+
+    Returns:
+        List of matching entries, each containing:
+        - id: Unique entry identifier
+        - name: Entity or individual name
+        - entry_type: "entity", "individual", "vessel", or "aircraft"
+        - source_list: Which screening list this entry is from
+        - programs: Applicable sanctions programs
+        - aliases: Alternative names
+        - addresses: Known addresses
+        - countries: Associated countries
+        - remarks: Additional notes
+        - match_score: Relevance score (0-1)
+        - match_type: How the match was found ("fts_match", "fuzzy_name", "alias")
+    """
+    db = get_sanctions_db()
+
+    # Clamp limit
+    limit = max(1, min(limit, 100))
+
+    # Validate source_list if provided
+    if source_list and source_list not in CSL_SOURCE_LISTS:
+        return [{
+            "error": f"Invalid source_list: {source_list}",
+            "valid_options": list(CSL_SOURCE_LISTS.keys()),
+        }]
+
+    results = db.search_csl(
+        query=query,
+        source_list=source_list,
+        country=country,
+        fuzzy_threshold=fuzzy_threshold,
+        limit=limit,
+    )
+
+    # Add source list display names
+    for result in results:
+        source_code = result.get("source_list", "")
+        result["source_list_name"] = CSL_SOURCE_LISTS.get(source_code, source_code)
+
+    return results
+
+
+@mcp.tool()
+@audit_log
+async def get_csl_statistics() -> dict:
+    """
+    Get statistics about the Consolidated Screening List database.
+
+    Returns counts of entries by source list, helping understand the
+    coverage and composition of the screening database.
+
+    Returns:
+        Dictionary containing:
+        - total_entries: Total number of CSL entries
+        - by_source_list: Breakdown by source list with counts
+        - last_updated: When the data was last refreshed (if available)
+    """
+    db = get_sanctions_db()
+
+    stats = db.get_csl_stats()
+    total = sum(stats.values())
+
+    # Map codes to display names
+    by_source = {
+        CSL_SOURCE_LISTS.get(code, code): count
+        for code, count in stats.items()
+    }
+
+    return {
+        "total_entries": total,
+        "by_source_list": by_source,
+        "source_lists_included": list(CSL_SOURCE_LISTS.values()),
+        "note": "CSL data is sourced from OpenSanctions mirror of official U.S. government lists",
+    }
