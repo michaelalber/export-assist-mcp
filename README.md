@@ -194,8 +194,8 @@ EXPORT_CONTROL_MCP_TRANSPORT=stdio
 
 ## Author
 
-Michael K Alber
+Michael K Alber ([@michaelalber](https://github.com/michaelalber))
 
 ## License
 
-Apache-2.0 - 2026 Michael K Alber
+Apache License 2.0 - see [LICENSE](LICENSE)
