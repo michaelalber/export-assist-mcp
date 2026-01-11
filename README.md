@@ -14,8 +14,9 @@ A FastMCP-based Model Context Protocol server for National Laboratory Export Con
 ### Regulation Tools
 - `search_ear` - Semantic search over Export Administration Regulations (15 CFR 730-774)
 - `search_itar` - Semantic search over ITAR (22 CFR 120-130)
-- `get_eccn` - Lookup specific ECCN details and control reasons
-- `get_usml_category` - Lookup USML category details
+- `search_regulations` - Combined search across both EAR and ITAR
+- `get_eccn_details` - Lookup specific ECCN details and control reasons
+- `get_usml_category_details` - Lookup USML category details
 - `compare_jurisdictions` - EAR vs ITAR jurisdiction analysis
 
 ### Sanctions Tools
@@ -24,6 +25,8 @@ A FastMCP-based Model Context Protocol server for National Laboratory Export Con
 - `check_country_sanctions` - Country-specific sanctions summary
 
 CSL includes: SDN, Entity List, Denied Persons, Unverified List, MEU List, ITAR Debarred, Nonproliferation, FSE, SSI, CAPTA, NS-MBS, NS-CMIC, NS-PLC
+
+Legacy tools (use CSL instead): `search_entity_list`, `search_sdn_list`, `search_denied_persons`
 
 ### DOE Nuclear Tools (10 CFR 810)
 - `check_cfr810_country` - Check nuclear technology transfer authorization status
@@ -35,11 +38,12 @@ CSL includes: SDN, Entity List, Denied Persons, Unverified List, MEU List, ITAR 
 - `suggest_classification` - AI-assisted ECCN/USML suggestions based on item description
 - `classification_decision_tree` - Step-by-step classification guidance
 - `check_license_exception` - Evaluate applicable license exceptions (TMP, LVS, GOV, etc.)
+- `get_recent_updates` - Recent BIS/DDTC Federal Register notices (live API)
 
 ### Reference Tools
-- `get_country_group` - EAR country group membership (A:1, D:1, etc.)
-- `get_recent_updates` - Recent BIS/DDTC Federal Register notices (live API)
-- `explain_term` - Export control glossary lookup
+- `get_country_group_info` - EAR country group membership (A:1, D:1, etc.)
+- `get_license_exception_info` - License exception details (LVS, TMP, GOV, ENC, etc.)
+- `explain_export_term` - Export control glossary lookup
 
 ## Installation
 
@@ -80,7 +84,8 @@ uv run python scripts/ingest_all.py --sample
 |--------|-----|--------|
 | EAR | https://www.ecfr.gov (15 CFR 730-774) | XML |
 | ITAR | https://www.ecfr.gov (22 CFR 120-130) | XML |
-| CSL | https://data.opensanctions.org (mirrors trade.gov) | JSON |
+| CSL | https://data.trade.gov (primary) | JSON |
+| CSL | https://data.opensanctions.org (fallback mirror) | JSON |
 | Federal Register | https://www.federalregister.gov/api/v1 | JSON API |
 
 The Consolidated Screening List (CSL) combines 13 government screening lists from Commerce (Entity List, Denied Persons, Unverified List, MEU List), State (ITAR Debarred, Nonproliferation), and Treasury (SDN, FSE, SSI, CAPTA, NS-MBS, NS-CMIC, NS-PLC).
@@ -120,6 +125,9 @@ uv run pytest
 # Run tests with coverage
 uv run pytest --cov=export_control_mcp
 
+# Linting
+uv run ruff check src/ tests/
+
 # Type checking
 uv run mypy src/
 
@@ -144,6 +152,7 @@ src/export_control_mcp/
 │   ├── sanctions_db.py       # SQLite + FTS5 (sanctions + CSL)
 │   └── federal_register.py   # Federal Register API
 ├── resources/                # Reference data
+│   ├── reference_data.py     # Country groups, ECCN/USML, glossary
 │   └── doe_nuclear.py        # 10 CFR 810 country lists
 ├── tools/                    # MCP tools
 │   ├── regulations.py        # EAR/ITAR search
