@@ -12,7 +12,19 @@ class TestCountryGroupStructure:
 
     def test_required_country_groups_exist(self):
         """All standard EAR country groups should be defined."""
-        required_groups = ["A:1", "A:5", "A:6", "B", "D:1", "D:2", "D:3", "D:4", "D:5", "E:1", "E:2"]
+        required_groups = [
+            "A:1",
+            "A:5",
+            "A:6",
+            "B",
+            "D:1",
+            "D:2",
+            "D:3",
+            "D:4",
+            "D:5",
+            "E:1",
+            "E:2",
+        ]
         for group in required_groups:
             assert group in COUNTRY_GROUPS, f"Missing country group: {group}"
 
@@ -100,7 +112,7 @@ class TestEmbargoCountries:
         a5 = set(COUNTRY_GROUPS["A:5"]["countries"])
         d5 = set(COUNTRY_GROUPS["D:5"]["countries"])
         # A:5 and D:5 should be identical
-        assert a5 == d5, f"A:5 and D:5 differ: A:5-D:5={a5-d5}, D:5-A:5={d5-a5}"
+        assert a5 == d5, f"A:5 and D:5 differ: A:5-D:5={a5 - d5}, D:5-A:5={d5 - a5}"
 
     def test_core_embargo_countries_present(self):
         """Core embargo countries should be in D:5."""

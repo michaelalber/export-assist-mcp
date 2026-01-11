@@ -80,7 +80,9 @@ class TestECCNContentAccuracy:
         """5A002 should be information security/encryption."""
         data = ECCN_DATA.get("5A002")
         assert data is not None, "5A002 should exist"
-        assert "information security" in data["title"].lower() or "security" in data["title"].lower()
+        assert (
+            "information security" in data["title"].lower() or "security" in data["title"].lower()
+        )
         assert "EI" in data["control_reasons"], "5A002 should have EI control reason"
 
     def test_9a004_is_spacecraft(self):
@@ -96,9 +98,9 @@ class TestECCNContentAccuracy:
         for eccn in encryption_eccns:
             data = ECCN_DATA.get(eccn)
             if data:
-                assert "ENC" in data.get(
-                    "license_exceptions", []
-                ), f"{eccn} should have ENC exception"
+                assert "ENC" in data.get("license_exceptions", []), (
+                    f"{eccn} should have ENC exception"
+                )
 
 
 class TestECCNLookupFunction:

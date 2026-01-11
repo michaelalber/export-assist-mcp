@@ -49,7 +49,9 @@ class TestEARTerms:
         """'EAR99' should be defined."""
         assert "EAR99" in GLOSSARY
         entry = GLOSSARY["EAR99"]
-        assert "not listed" in entry["definition"].lower() or "not on" in entry["definition"].lower()
+        assert (
+            "not listed" in entry["definition"].lower() or "not on" in entry["definition"].lower()
+        )
 
     def test_nlr_defined(self):
         """'NLR' (No License Required) should be defined."""
