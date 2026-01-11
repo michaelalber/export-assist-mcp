@@ -6,7 +6,7 @@ A FastMCP-based Model Context Protocol server providing AI assistant capabilitie
 
 ## Tech Stack
 
-- **Runtime**: Python 3.11+
+- **Runtime**: Python 3.10+
 - **Framework**: FastMCP (MCP SDK)
 - **Vector Store**: ChromaDB (local, no external dependencies)
 - **Embeddings**: sentence-transformers (all-MiniLM-L6-v2 for efficiency, or BGE for quality)
