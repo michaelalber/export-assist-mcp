@@ -192,6 +192,10 @@ EXPORT_CONTROL_MCP_TRANSPORT=stdio
 - No external API calls except for data ingestion from official government sources
 - Suitable for CUI-adjacent environments (consult ISSM for classified networks)
 
+## Author
+
+Michael K Alber
+
 ## License
 
-Apache-2.0
+Apache-2.0 - 2026 Michael K Alber
