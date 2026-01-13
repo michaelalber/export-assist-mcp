@@ -147,6 +147,27 @@ uv run ruff format --check src/ tests/
 uv run mypy src/
 ```
 
+## Code Quality Standards
+
+### Quality Gates
+- **Cyclomatic Complexity**: Methods <10, classes <20
+- **Code Coverage**: 80% minimum for business logic, 95% for security-critical code
+- **Maintainability Index**: Target 70+
+- **Code Duplication**: Maximum 3%
+
+### TDD Approach
+- **Pattern**: Red → Green → Refactor → Quality Check
+- Test naming: `Should_ExpectedBehavior_When_StateUnderTest` or `Method_Scenario_ExpectedResult`
+- Arrange-Act-Assert pattern strictly enforced
+- One assertion per test (except related validations)
+
+### YAGNI Principle (You Aren't Gonna Need It)
+- **Start simple** with direct implementations
+- **Add abstractions only** when complexity demands it
+- **Prefer composition** over inheritance
+- **Don't create abstractions** for future "what-ifs"
+- **Refactor to add abstractions** when patterns emerge (Rule of Three)
+
 ## Security Considerations
 
 - This server handles CUI-adjacent data. Do not deploy on classified networks without ISSM approval.
