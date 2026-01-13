@@ -20,12 +20,180 @@ from export_control_mcp.models.sanctions import (
 # Valid table names for SQL queries (prevents SQL injection)
 _VALID_TABLES = frozenset(["entity_list", "sdn_list", "denied_persons", "country_sanctions", "csl"])
 
+# =============================================================================
+# Database Schema Definitions (extracted for maintainability)
+# =============================================================================
+
+_SCHEMA_ENTITY_LIST = """
+CREATE TABLE IF NOT EXISTS entity_list (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    aliases TEXT DEFAULT '[]',
+    addresses TEXT DEFAULT '[]',
+    country TEXT NOT NULL,
+    license_requirement TEXT DEFAULT '',
+    license_policy TEXT DEFAULT '',
+    federal_register_citation TEXT DEFAULT '',
+    effective_date TEXT,
+    standard_order TEXT DEFAULT ''
+)
+"""
+
+_SCHEMA_ENTITY_LIST_FTS = """
+CREATE VIRTUAL TABLE IF NOT EXISTS entity_list_fts USING fts5(
+    name, aliases, content='entity_list', content_rowid='rowid'
+)
+"""
+
+_SCHEMA_SDN_LIST = """
+CREATE TABLE IF NOT EXISTS sdn_list (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    sdn_type TEXT NOT NULL,
+    programs TEXT DEFAULT '[]',
+    aliases TEXT DEFAULT '[]',
+    addresses TEXT DEFAULT '[]',
+    ids TEXT DEFAULT '[]',
+    nationalities TEXT DEFAULT '[]',
+    dates_of_birth TEXT DEFAULT '[]',
+    places_of_birth TEXT DEFAULT '[]',
+    remarks TEXT DEFAULT ''
+)
+"""
+
+_SCHEMA_SDN_LIST_FTS = """
+CREATE VIRTUAL TABLE IF NOT EXISTS sdn_list_fts USING fts5(
+    name, aliases, content='sdn_list', content_rowid='rowid'
+)
+"""
+
+_SCHEMA_DENIED_PERSONS = """
+CREATE TABLE IF NOT EXISTS denied_persons (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    addresses TEXT DEFAULT '[]',
+    effective_date TEXT,
+    expiration_date TEXT,
+    standard_order TEXT DEFAULT '',
+    federal_register_citation TEXT DEFAULT ''
+)
+"""
+
+_SCHEMA_DENIED_PERSONS_FTS = """
+CREATE VIRTUAL TABLE IF NOT EXISTS denied_persons_fts USING fts5(
+    name, content='denied_persons', content_rowid='rowid'
+)
+"""
+
+_SCHEMA_COUNTRY_SANCTIONS = """
+CREATE TABLE IF NOT EXISTS country_sanctions (
+    country_code TEXT PRIMARY KEY,
+    country_name TEXT NOT NULL,
+    ofac_programs TEXT DEFAULT '[]',
+    embargo_type TEXT DEFAULT 'none',
+    ear_country_groups TEXT DEFAULT '[]',
+    itar_restricted INTEGER DEFAULT 0,
+    arms_embargo INTEGER DEFAULT 0,
+    summary TEXT DEFAULT '',
+    key_restrictions TEXT DEFAULT '[]',
+    notes TEXT DEFAULT '[]'
+)
+"""
+
+_SCHEMA_CSL = """
+CREATE TABLE IF NOT EXISTS csl (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    entry_type TEXT NOT NULL,
+    source_list TEXT NOT NULL,
+    programs TEXT DEFAULT '[]',
+    aliases TEXT DEFAULT '[]',
+    addresses TEXT DEFAULT '[]',
+    countries TEXT DEFAULT '[]',
+    remarks TEXT DEFAULT ''
+)
+"""
+
+_SCHEMA_CSL_FTS = """
+CREATE VIRTUAL TABLE IF NOT EXISTS csl_fts USING fts5(
+    name, aliases, content='csl', content_rowid='rowid'
+)
+"""
+
+# FTS sync triggers for each table
+_TRIGGERS_ENTITY_LIST = """
+CREATE TRIGGER IF NOT EXISTS entity_list_ai AFTER INSERT ON entity_list BEGIN
+    INSERT INTO entity_list_fts(rowid, name, aliases) VALUES (new.rowid, new.name, new.aliases);
+END;
+CREATE TRIGGER IF NOT EXISTS entity_list_ad AFTER DELETE ON entity_list BEGIN
+    INSERT INTO entity_list_fts(entity_list_fts, rowid, name, aliases)
+    VALUES('delete', old.rowid, old.name, old.aliases);
+END;
+CREATE TRIGGER IF NOT EXISTS entity_list_au AFTER UPDATE ON entity_list BEGIN
+    INSERT INTO entity_list_fts(entity_list_fts, rowid, name, aliases)
+    VALUES('delete', old.rowid, old.name, old.aliases);
+    INSERT INTO entity_list_fts(rowid, name, aliases) VALUES (new.rowid, new.name, new.aliases);
+END;
+"""
+
+_TRIGGERS_SDN_LIST = """
+CREATE TRIGGER IF NOT EXISTS sdn_list_ai AFTER INSERT ON sdn_list BEGIN
+    INSERT INTO sdn_list_fts(rowid, name, aliases) VALUES (new.rowid, new.name, new.aliases);
+END;
+CREATE TRIGGER IF NOT EXISTS sdn_list_ad AFTER DELETE ON sdn_list BEGIN
+    INSERT INTO sdn_list_fts(sdn_list_fts, rowid, name, aliases)
+    VALUES('delete', old.rowid, old.name, old.aliases);
+END;
+CREATE TRIGGER IF NOT EXISTS sdn_list_au AFTER UPDATE ON sdn_list BEGIN
+    INSERT INTO sdn_list_fts(sdn_list_fts, rowid, name, aliases)
+    VALUES('delete', old.rowid, old.name, old.aliases);
+    INSERT INTO sdn_list_fts(rowid, name, aliases) VALUES (new.rowid, new.name, new.aliases);
+END;
+"""
+
+_TRIGGERS_DENIED_PERSONS = """
+CREATE TRIGGER IF NOT EXISTS denied_persons_ai AFTER INSERT ON denied_persons BEGIN
+    INSERT INTO denied_persons_fts(rowid, name) VALUES (new.rowid, new.name);
+END;
+CREATE TRIGGER IF NOT EXISTS denied_persons_ad AFTER DELETE ON denied_persons BEGIN
+    INSERT INTO denied_persons_fts(denied_persons_fts, rowid, name)
+    VALUES('delete', old.rowid, old.name);
+END;
+CREATE TRIGGER IF NOT EXISTS denied_persons_au AFTER UPDATE ON denied_persons BEGIN
+    INSERT INTO denied_persons_fts(denied_persons_fts, rowid, name)
+    VALUES('delete', old.rowid, old.name);
+    INSERT INTO denied_persons_fts(rowid, name) VALUES (new.rowid, new.name);
+END;
+"""
+
+_TRIGGERS_CSL = """
+CREATE TRIGGER IF NOT EXISTS csl_ai AFTER INSERT ON csl BEGIN
+    INSERT INTO csl_fts(rowid, name, aliases) VALUES (new.rowid, new.name, new.aliases);
+END;
+CREATE TRIGGER IF NOT EXISTS csl_ad AFTER DELETE ON csl BEGIN
+    INSERT INTO csl_fts(csl_fts, rowid, name, aliases)
+    VALUES('delete', old.rowid, old.name, old.aliases);
+END;
+CREATE TRIGGER IF NOT EXISTS csl_au AFTER UPDATE ON csl BEGIN
+    INSERT INTO csl_fts(csl_fts, rowid, name, aliases)
+    VALUES('delete', old.rowid, old.name, old.aliases);
+    INSERT INTO csl_fts(rowid, name, aliases) VALUES (new.rowid, new.name, new.aliases);
+END;
+"""
+
 
 class SanctionsDBService:
     """SQLite database service for sanctions list queries.
 
     Uses FTS5 for full-text search and rapidfuzz for fuzzy name matching.
     Supports Entity List, SDN List, Denied Persons List, and country sanctions.
+
+    Performance Notes:
+    - FTS5 handles most queries without needing fuzzy fallback
+    - Fuzzy matching uses rapidfuzz (C implementation), which is already highly optimized
+    - Dataset sizes are bounded (sanctions lists are typically <50K entries)
+    - Async executor was evaluated but not needed: rapidfuzz operations complete
+      in microseconds, and executor overhead would exceed the matching time
     """
 
     def __init__(self, db_path: str | Path | None = None):
@@ -50,195 +218,28 @@ class SanctionsDBService:
         return self._conn
 
     def _initialize_db(self) -> None:
-        """Create database schema if not exists."""
+        """Create database schema if not exists.
+
+        Uses module-level constants for schema definitions to reduce complexity.
+        """
         conn = self._get_connection()
 
-        # Entity List table
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS entity_list (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                aliases TEXT DEFAULT '[]',
-                addresses TEXT DEFAULT '[]',
-                country TEXT NOT NULL,
-                license_requirement TEXT DEFAULT '',
-                license_policy TEXT DEFAULT '',
-                federal_register_citation TEXT DEFAULT '',
-                effective_date TEXT,
-                standard_order TEXT DEFAULT ''
-            )
-        """)
+        # Create tables
+        conn.execute(_SCHEMA_ENTITY_LIST)
+        conn.execute(_SCHEMA_ENTITY_LIST_FTS)
+        conn.execute(_SCHEMA_SDN_LIST)
+        conn.execute(_SCHEMA_SDN_LIST_FTS)
+        conn.execute(_SCHEMA_DENIED_PERSONS)
+        conn.execute(_SCHEMA_DENIED_PERSONS_FTS)
+        conn.execute(_SCHEMA_COUNTRY_SANCTIONS)
+        conn.execute(_SCHEMA_CSL)
+        conn.execute(_SCHEMA_CSL_FTS)
 
-        # Entity List FTS5 index
-        conn.execute("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS entity_list_fts USING fts5(
-                name,
-                aliases,
-                content='entity_list',
-                content_rowid='rowid'
-            )
-        """)
-
-        # SDN List table
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS sdn_list (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                sdn_type TEXT NOT NULL,
-                programs TEXT DEFAULT '[]',
-                aliases TEXT DEFAULT '[]',
-                addresses TEXT DEFAULT '[]',
-                ids TEXT DEFAULT '[]',
-                nationalities TEXT DEFAULT '[]',
-                dates_of_birth TEXT DEFAULT '[]',
-                places_of_birth TEXT DEFAULT '[]',
-                remarks TEXT DEFAULT ''
-            )
-        """)
-
-        # SDN List FTS5 index
-        conn.execute("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS sdn_list_fts USING fts5(
-                name,
-                aliases,
-                content='sdn_list',
-                content_rowid='rowid'
-            )
-        """)
-
-        # Denied Persons List table
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS denied_persons (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                addresses TEXT DEFAULT '[]',
-                effective_date TEXT,
-                expiration_date TEXT,
-                standard_order TEXT DEFAULT '',
-                federal_register_citation TEXT DEFAULT ''
-            )
-        """)
-
-        # Denied Persons FTS5 index
-        conn.execute("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS denied_persons_fts USING fts5(
-                name,
-                content='denied_persons',
-                content_rowid='rowid'
-            )
-        """)
-
-        # Country Sanctions table
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS country_sanctions (
-                country_code TEXT PRIMARY KEY,
-                country_name TEXT NOT NULL,
-                ofac_programs TEXT DEFAULT '[]',
-                embargo_type TEXT DEFAULT 'none',
-                ear_country_groups TEXT DEFAULT '[]',
-                itar_restricted INTEGER DEFAULT 0,
-                arms_embargo INTEGER DEFAULT 0,
-                summary TEXT DEFAULT '',
-                key_restrictions TEXT DEFAULT '[]',
-                notes TEXT DEFAULT '[]'
-            )
-        """)
-
-        # Consolidated Screening List table
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS csl (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                entry_type TEXT NOT NULL,
-                source_list TEXT NOT NULL,
-                programs TEXT DEFAULT '[]',
-                aliases TEXT DEFAULT '[]',
-                addresses TEXT DEFAULT '[]',
-                countries TEXT DEFAULT '[]',
-                remarks TEXT DEFAULT ''
-            )
-        """)
-
-        # CSL FTS5 index
-        conn.execute("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS csl_fts USING fts5(
-                name,
-                aliases,
-                content='csl',
-                content_rowid='rowid'
-            )
-        """)
-
-        # Create triggers to keep FTS indices in sync
-        conn.executescript("""
-            CREATE TRIGGER IF NOT EXISTS entity_list_ai AFTER INSERT ON entity_list BEGIN
-                INSERT INTO entity_list_fts(rowid, name, aliases)
-                VALUES (new.rowid, new.name, new.aliases);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS entity_list_ad AFTER DELETE ON entity_list BEGIN
-                INSERT INTO entity_list_fts(entity_list_fts, rowid, name, aliases)
-                VALUES('delete', old.rowid, old.name, old.aliases);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS entity_list_au AFTER UPDATE ON entity_list BEGIN
-                INSERT INTO entity_list_fts(entity_list_fts, rowid, name, aliases)
-                VALUES('delete', old.rowid, old.name, old.aliases);
-                INSERT INTO entity_list_fts(rowid, name, aliases)
-                VALUES (new.rowid, new.name, new.aliases);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS sdn_list_ai AFTER INSERT ON sdn_list BEGIN
-                INSERT INTO sdn_list_fts(rowid, name, aliases)
-                VALUES (new.rowid, new.name, new.aliases);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS sdn_list_ad AFTER DELETE ON sdn_list BEGIN
-                INSERT INTO sdn_list_fts(sdn_list_fts, rowid, name, aliases)
-                VALUES('delete', old.rowid, old.name, old.aliases);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS sdn_list_au AFTER UPDATE ON sdn_list BEGIN
-                INSERT INTO sdn_list_fts(sdn_list_fts, rowid, name, aliases)
-                VALUES('delete', old.rowid, old.name, old.aliases);
-                INSERT INTO sdn_list_fts(rowid, name, aliases)
-                VALUES (new.rowid, new.name, new.aliases);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS denied_persons_ai AFTER INSERT ON denied_persons BEGIN
-                INSERT INTO denied_persons_fts(rowid, name)
-                VALUES (new.rowid, new.name);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS denied_persons_ad AFTER DELETE ON denied_persons BEGIN
-                INSERT INTO denied_persons_fts(denied_persons_fts, rowid, name)
-                VALUES('delete', old.rowid, old.name);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS denied_persons_au AFTER UPDATE ON denied_persons BEGIN
-                INSERT INTO denied_persons_fts(denied_persons_fts, rowid, name)
-                VALUES('delete', old.rowid, old.name);
-                INSERT INTO denied_persons_fts(rowid, name)
-                VALUES (new.rowid, new.name);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS csl_ai AFTER INSERT ON csl BEGIN
-                INSERT INTO csl_fts(rowid, name, aliases)
-                VALUES (new.rowid, new.name, new.aliases);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS csl_ad AFTER DELETE ON csl BEGIN
-                INSERT INTO csl_fts(csl_fts, rowid, name, aliases)
-                VALUES('delete', old.rowid, old.name, old.aliases);
-            END;
-
-            CREATE TRIGGER IF NOT EXISTS csl_au AFTER UPDATE ON csl BEGIN
-                INSERT INTO csl_fts(csl_fts, rowid, name, aliases)
-                VALUES('delete', old.rowid, old.name, old.aliases);
-                INSERT INTO csl_fts(rowid, name, aliases)
-                VALUES (new.rowid, new.name, new.aliases);
-            END;
-        """)
+        # Create FTS sync triggers
+        conn.executescript(_TRIGGERS_ENTITY_LIST)
+        conn.executescript(_TRIGGERS_SDN_LIST)
+        conn.executescript(_TRIGGERS_DENIED_PERSONS)
+        conn.executescript(_TRIGGERS_CSL)
 
         conn.commit()
 
@@ -755,6 +756,138 @@ class SanctionsDBService:
 
     # --- CSL Operations ---
 
+    def _matches_country_filter(self, row: sqlite3.Row, country: str | None) -> bool:
+        """Check if a CSL row matches the country filter.
+
+        Args:
+            row: Database row with 'countries' JSON field
+            country: Optional country code filter (case-insensitive)
+
+        Returns:
+            True if no filter specified or row matches filter
+        """
+        if not country:
+            return True
+        countries_list = json.loads(row["countries"]) if row["countries"] else []
+        return country.upper() in [c.upper() for c in countries_list]
+
+    def _search_csl_fts(
+        self,
+        query: str,
+        source_list: str | None,
+        country: str | None,
+        limit: int,
+    ) -> tuple[list[dict], set[str]]:
+        """Perform FTS5 search on CSL table.
+
+        Args:
+            query: Search query
+            source_list: Optional source list filter
+            country: Optional country filter
+            limit: Maximum results
+
+        Returns:
+            Tuple of (results list, set of seen IDs)
+        """
+        conn = self._get_connection()
+        results = []
+        seen_ids: set[str] = set()
+
+        fts_query = query.replace('"', '""')
+        sql = """
+            SELECT c.*, csl_fts.rank
+            FROM csl c
+            JOIN csl_fts ON c.rowid = csl_fts.rowid
+            WHERE csl_fts MATCH ?
+        """
+        params: list = [f'"{fts_query}"']
+
+        if source_list:
+            sql += " AND c.source_list = ?"
+            params.append(source_list)
+
+        sql += " ORDER BY rank LIMIT ?"
+        params.append(limit * 2)
+
+        cursor = conn.execute(sql, params)
+
+        for row in cursor:
+            if not self._matches_country_filter(row, country):
+                continue
+
+            entry = self._row_to_csl_dict(row)
+            score = fuzz.ratio(query.lower(), row["name"].lower()) / 100.0
+            entry["match_score"] = score
+            entry["match_type"] = "fts_match"
+            results.append(entry)
+            seen_ids.add(row["id"])
+
+        return results, seen_ids
+
+    def _search_csl_fuzzy(
+        self,
+        query: str,
+        source_list: str | None,
+        country: str | None,
+        fuzzy_threshold: float,
+        seen_ids: set[str],
+    ) -> list[dict]:
+        """Perform fuzzy search on CSL table for entries not found via FTS.
+
+        Args:
+            query: Search query
+            source_list: Optional source list filter
+            country: Optional country filter
+            fuzzy_threshold: Minimum fuzzy match score (0-1)
+            seen_ids: Set of IDs already matched by FTS
+
+        Returns:
+            List of fuzzy-matched results
+        """
+        conn = self._get_connection()
+        results = []
+
+        sql = "SELECT * FROM csl"
+        params = []
+
+        if source_list:
+            sql += " WHERE source_list = ?"
+            params.append(source_list)
+
+        cursor = conn.execute(sql, params)
+
+        for row in cursor:
+            if row["id"] in seen_ids:
+                continue
+
+            if not self._matches_country_filter(row, country):
+                continue
+
+            # Check name match
+            name_score = fuzz.ratio(query.lower(), row["name"].lower()) / 100.0
+            if name_score >= fuzzy_threshold:
+                entry = self._row_to_csl_dict(row)
+                entry["match_score"] = name_score
+                entry["match_type"] = "fuzzy_name"
+                results.append(entry)
+                seen_ids.add(row["id"])
+                continue
+
+            # Check alias match
+            aliases = json.loads(row["aliases"]) if row["aliases"] else []
+            for alias in aliases:
+                alias_score = fuzz.ratio(query.lower(), alias.lower()) / 100.0
+                if alias_score >= fuzzy_threshold:
+                    entry = self._row_to_csl_dict(row)
+                    entry["match_score"] = alias_score
+                    entry["match_type"] = "alias"
+                    entry["matched_alias"] = alias
+                    results.append(entry)
+                    seen_ids.add(row["id"])
+                    break
+
+        return results
+
     def add_csl_entry(
         self,
         entry_id: str,
@@ -799,6 +932,9 @@ class SanctionsDBService:
     ) -> list[dict]:
         """Search the Consolidated Screening List.
 
+        Uses a two-phase search: FTS5 for fast exact/prefix matching,
+        followed by fuzzy search for additional matches if needed.
+
         Args:
             query: Name or partial name to search for
             source_list: Optional filter by source list code
@@ -809,88 +945,15 @@ class SanctionsDBService:
         Returns:
             List of matching entries with scores
         """
-        conn = self._get_connection()
-        results = []
+        # Phase 1: FTS5 search
+        results, seen_ids = self._search_csl_fts(query, source_list, country, limit)
 
-        # First try FTS5 match
-        fts_query = query.replace('"', '""')
-        sql = """
-            SELECT c.*, csl_fts.rank
-            FROM csl c
-            JOIN csl_fts ON c.rowid = csl_fts.rowid
-            WHERE csl_fts MATCH ?
-        """
-        params: list = [f'"{fts_query}"']
-
-        if source_list:
-            sql += " AND c.source_list = ?"
-            params.append(source_list)
-
-        sql += " ORDER BY rank LIMIT ?"
-        params.append(limit * 2)
-
-        cursor = conn.execute(sql, params)
-        seen_ids = set()
-
-        for row in cursor:
-            entry = self._row_to_csl_dict(row)
-            countries_list = json.loads(row["countries"]) if row["countries"] else []
-
-            # Apply country filter if specified
-            if country and country.upper() not in [c.upper() for c in countries_list]:
-                continue
-
-            score = fuzz.ratio(query.lower(), row["name"].lower()) / 100.0
-            entry["match_score"] = score
-            entry["match_type"] = "fts_match"
-            results.append(entry)
-            seen_ids.add(row["id"])
-
-        # Fuzzy search if needed
+        # Phase 2: Fuzzy search if needed
         if len(results) < limit:
-            sql = "SELECT * FROM csl"
-            conditions = []
-            params = []
-
-            if source_list:
-                conditions.append("source_list = ?")
-                params.append(source_list)
-
-            if conditions:
-                sql += " WHERE " + " AND ".join(conditions)
-
-            cursor = conn.execute(sql, params)
-
-            for row in cursor:
-                if row["id"] in seen_ids:
-                    continue
-
-                countries_list = json.loads(row["countries"]) if row["countries"] else []
-                if country and country.upper() not in [c.upper() for c in countries_list]:
-                    continue
-
-                # Check name
-                name_score = fuzz.ratio(query.lower(), row["name"].lower()) / 100.0
-                if name_score >= fuzzy_threshold:
-                    entry = self._row_to_csl_dict(row)
-                    entry["match_score"] = name_score
-                    entry["match_type"] = "fuzzy_name"
-                    results.append(entry)
-                    seen_ids.add(row["id"])
-                    continue
-
-                # Check aliases
-                aliases = json.loads(row["aliases"]) if row["aliases"] else []
-                for alias in aliases:
-                    alias_score = fuzz.ratio(query.lower(), alias.lower()) / 100.0
-                    if alias_score >= fuzzy_threshold:
-                        entry = self._row_to_csl_dict(row)
-                        entry["match_score"] = alias_score
-                        entry["match_type"] = "alias"
-                        entry["matched_alias"] = alias
-                        results.append(entry)
-                        seen_ids.add(row["id"])
-                        break
+            fuzzy_results = self._search_csl_fuzzy(
+                query, source_list, country, fuzzy_threshold, seen_ids
+            )
+            results.extend(fuzzy_results)
 
         # Sort by score and limit
         results.sort(key=lambda r: r.get("match_score", 0), reverse=True)
