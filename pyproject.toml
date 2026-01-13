@@ -60,6 +60,7 @@ dev = [
     "pytest-cov>=4.0",
     "mypy>=1.5",
     "ruff>=0.1.0",
+    "bandit[toml]>=1.7.0",
 ]
 
 [project.scripts]
@@ -115,3 +116,23 @@ testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
+
+[tool.bandit]
+# Bandit security linter configuration
+# https://bandit.readthedocs.io/en/latest/config.html
+targets = ["src"]
+exclude_dirs = ["tests", ".venv", "venv"]
+skips = [
+    # B101: assert used - acceptable in non-production code paths
+    "B101",
+    # B110: try/except/pass - used intentionally for optional checks
+    "B110",
+    # B405: xml.etree.ElementTree.Element - used for type hints only, actual parsing uses defusedxml
+    "B405",
+]
+# Severity levels: LOW, MEDIUM, HIGH
+# Confidence levels: LOW, MEDIUM, HIGH
+
+[tool.bandit.assert_used]
+# Allow assert in test files
+exclude_dirs = ["tests"]

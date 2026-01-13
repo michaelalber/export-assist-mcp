@@ -948,7 +948,7 @@ class SanctionsDBService:
 
         for table in _VALID_TABLES:
             # Table name validated against allowlist - safe for SQL interpolation
-            cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")  # nosemgrep
+            cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")  # nosec B608  # nosemgrep
             stats[table] = cursor.fetchone()[0]
 
         return stats

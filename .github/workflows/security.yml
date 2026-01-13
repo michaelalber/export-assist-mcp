@@ -10,6 +10,38 @@ on:
     - cron: "0 9 * * 1"
 
 jobs:
+  bandit:
+    name: Bandit Security Linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Bandit
+        run: pip install bandit[toml]
+
+      - name: Run Bandit
+        run: bandit -r src/ -c pyproject.toml -f json -o bandit-report.json || true
+
+      - name: Display Bandit Results
+        run: |
+          echo "=== Bandit Security Scan Results ==="
+          bandit -r src/ -c pyproject.toml -f txt || true
+
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+
+      - name: Fail on High Severity Issues
+        run: bandit -r src/ -c pyproject.toml -ll -ii
+
   semgrep:
     name: Semgrep SAST
     runs-on: ubuntu-latest
