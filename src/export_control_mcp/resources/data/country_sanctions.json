@@ -1,0 +1,185 @@
+{
+  "_metadata": {
+    "description": "Country-level sanctions and export control data",
+    "source": "Compiled from OFAC, BIS, and DDTC regulations",
+    "last_updated": "2024-01-01",
+    "note": "This data changes with geopolitical events. Review quarterly."
+  },
+  "countries": {
+    "IR": {
+      "country_code": "IR",
+      "country_name": "Iran",
+      "ofac_programs": ["IRAN", "IRAN-TRA", "IRAN-HR", "IFSR", "IRGC"],
+      "embargo_type": "comprehensive",
+      "ear_country_groups": ["D:1", "D:3", "D:4", "E:1"],
+      "itar_restricted": true,
+      "arms_embargo": true,
+      "summary": "Iran is subject to comprehensive U.S. sanctions administered by OFAC and extensive export controls under EAR and ITAR.",
+      "key_restrictions": [
+        "Virtually all exports and reexports require a license",
+        "License applications generally denied under policy of denial",
+        "ITAR proscribed destination - no defense articles or services",
+        "Financial transactions heavily restricted"
+      ],
+      "notes": [
+        "Some humanitarian exceptions may apply",
+        "Iran Human Rights sanctions target specific officials"
+      ]
+    },
+    "KP": {
+      "country_code": "KP",
+      "country_name": "North Korea",
+      "ofac_programs": ["DPRK", "DPRK2", "DPRK3", "DPRK4"],
+      "embargo_type": "comprehensive",
+      "ear_country_groups": ["D:1", "D:3", "D:4", "E:1"],
+      "itar_restricted": true,
+      "arms_embargo": true,
+      "summary": "North Korea (DPRK) is subject to the most restrictive U.S. sanctions regime.",
+      "key_restrictions": [
+        "Complete trade embargo",
+        "All EAR-controlled items require license (presumption of denial)",
+        "ITAR proscribed destination",
+        "UN sanctions also apply"
+      ],
+      "notes": ["Limited humanitarian exceptions"]
+    },
+    "CU": {
+      "country_code": "CU",
+      "country_name": "Cuba",
+      "ofac_programs": ["CUBA"],
+      "embargo_type": "comprehensive",
+      "ear_country_groups": ["D:1", "E:1", "E:2"],
+      "itar_restricted": true,
+      "arms_embargo": true,
+      "summary": "Cuba is subject to comprehensive U.S. economic sanctions under the Cuban embargo.",
+      "key_restrictions": [
+        "General prohibition on trade and financial transactions",
+        "Export controls under both EAR and OFAC regulations",
+        "ITAR proscribed destination"
+      ],
+      "notes": [
+        "Some people-to-people travel exceptions",
+        "Certain telecom equipment exceptions available"
+      ]
+    },
+    "SY": {
+      "country_code": "SY",
+      "country_name": "Syria",
+      "ofac_programs": ["SYRIA"],
+      "embargo_type": "comprehensive",
+      "ear_country_groups": ["D:1", "D:3", "E:1"],
+      "itar_restricted": true,
+      "arms_embargo": true,
+      "summary": "Syria is subject to comprehensive U.S. sanctions including the Syria Accountability Act.",
+      "key_restrictions": [
+        "Broad prohibition on exports",
+        "License requirements for most items",
+        "ITAR proscribed destination",
+        "Designated pursuant to multiple sanctions programs"
+      ],
+      "notes": ["Limited humanitarian exceptions may apply"]
+    },
+    "RU": {
+      "country_code": "RU",
+      "country_name": "Russia",
+      "ofac_programs": ["RUSSIA-EO14024", "UKRAINE-EO13660", "RUSSIA"],
+      "embargo_type": "targeted",
+      "ear_country_groups": ["D:1", "D:4", "D:5"],
+      "itar_restricted": true,
+      "arms_embargo": true,
+      "summary": "Russia is subject to extensive targeted sanctions and export controls following its invasion of Ukraine.",
+      "key_restrictions": [
+        "Comprehensive export controls on technology, especially semiconductors",
+        "Entity List designations for hundreds of Russian entities",
+        "SDN designations for Russian government officials and oligarchs",
+        "Restrictions on luxury goods",
+        "ITAR proscribed destination"
+      ],
+      "notes": [
+        "Sanctions regime has expanded significantly since February 2022",
+        "Industry-specific guidance available from BIS and OFAC"
+      ]
+    },
+    "BY": {
+      "country_code": "BY",
+      "country_name": "Belarus",
+      "ofac_programs": ["BELARUS"],
+      "embargo_type": "targeted",
+      "ear_country_groups": ["D:1", "D:4"],
+      "itar_restricted": true,
+      "arms_embargo": true,
+      "summary": "Belarus is subject to extensive targeted sanctions due to support for Russia's actions in Ukraine.",
+      "key_restrictions": [
+        "Export controls aligned with Russia restrictions",
+        "SDN designations for Lukashenko regime officials",
+        "Technology restrictions similar to Russia"
+      ],
+      "notes": ["Sanctions expanded in coordination with Russia measures"]
+    },
+    "CN": {
+      "country_code": "CN",
+      "country_name": "China",
+      "ofac_programs": ["CMIC", "NS-CMIC"],
+      "embargo_type": "targeted",
+      "ear_country_groups": ["D:1", "D:3", "D:4", "D:5"],
+      "itar_restricted": false,
+      "arms_embargo": true,
+      "summary": "China is subject to targeted export controls, especially on advanced technology, and growing sanctions.",
+      "key_restrictions": [
+        "Strict controls on advanced semiconductors and chip manufacturing equipment",
+        "Entity List includes many Chinese companies (Huawei, SMIC, etc.)",
+        "Military End-User controls (MEU List)",
+        "U.S. arms embargo since 1989"
+      ],
+      "notes": [
+        "Not an ITAR proscribed country, but significant restrictions",
+        "Controls tightening on AI and quantum technology"
+      ]
+    },
+    "VE": {
+      "country_code": "VE",
+      "country_name": "Venezuela",
+      "ofac_programs": ["VENEZUELA", "VENEZUELA-EO13692"],
+      "embargo_type": "targeted",
+      "ear_country_groups": ["D:1", "D:4"],
+      "itar_restricted": false,
+      "arms_embargo": true,
+      "summary": "Venezuela is subject to targeted sanctions on the oil sector and government officials.",
+      "key_restrictions": [
+        "Oil sector restrictions (PDVSA)",
+        "SDN designations for Maduro regime officials",
+        "Financial restrictions"
+      ],
+      "notes": ["Some general licenses available for certain activities"]
+    },
+    "DE": {
+      "country_code": "DE",
+      "country_name": "Germany",
+      "ofac_programs": [],
+      "embargo_type": "none",
+      "ear_country_groups": ["A:1", "A:5", "B"],
+      "itar_restricted": false,
+      "arms_embargo": false,
+      "summary": "Germany is a close U.S. ally with favorable export control treatment.",
+      "key_restrictions": [
+        "Most commercial exports permitted under license exceptions",
+        "Some items may require license based on ECCN"
+      ],
+      "notes": ["NATO ally with defense trade cooperation agreements"]
+    },
+    "JP": {
+      "country_code": "JP",
+      "country_name": "Japan",
+      "ofac_programs": [],
+      "embargo_type": "none",
+      "ear_country_groups": ["A:1", "A:5", "B"],
+      "itar_restricted": false,
+      "arms_embargo": false,
+      "summary": "Japan is a close U.S. ally with favorable export control treatment.",
+      "key_restrictions": [
+        "Most commercial exports permitted under license exceptions"
+      ],
+      "notes": ["Treaty ally with extensive defense trade cooperation"]
+    }
+  }
+}

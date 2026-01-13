@@ -5,197 +5,24 @@ Denied Persons List, and country-level sanctions information.
 """
 
 from export_control_mcp.audit import audit_log
-from export_control_mcp.models.sanctions import (
-    CountrySanctions,
-    EntityType,
+from export_control_mcp.models.sanctions import EntityType
+from export_control_mcp.resources.country_sanctions import (
+    get_country_by_name as _get_country_by_name,
+)
+from export_control_mcp.resources.country_sanctions import (
+    get_country_sanctions as _get_country_sanctions,
+)
+from export_control_mcp.resources.country_sanctions import (
+    get_country_sanctions_data,
 )
 from export_control_mcp.server import mcp
 from export_control_mcp.services import get_sanctions_db
-
-# Country sanctions data (preloaded for common queries)
-COUNTRY_SANCTIONS_DATA: dict[str, CountrySanctions] = {
-    "IR": CountrySanctions(
-        country_code="IR",
-        country_name="Iran",
-        ofac_programs=["IRAN", "IRAN-TRA", "IRAN-HR", "IFSR", "IRGC"],
-        embargo_type="comprehensive",
-        ear_country_groups=["D:1", "D:3", "D:4", "E:1"],
-        itar_restricted=True,
-        arms_embargo=True,
-        summary="Iran is subject to comprehensive U.S. sanctions administered by OFAC and extensive export controls under EAR and ITAR.",
-        key_restrictions=[
-            "Virtually all exports and reexports require a license",
-            "License applications generally denied under policy of denial",
-            "ITAR proscribed destination - no defense articles or services",
-            "Financial transactions heavily restricted",
-        ],
-        notes=[
-            "Some humanitarian exceptions may apply",
-            "Iran Human Rights sanctions target specific officials",
-        ],
-    ),
-    "KP": CountrySanctions(
-        country_code="KP",
-        country_name="North Korea",
-        ofac_programs=["DPRK", "DPRK2", "DPRK3", "DPRK4"],
-        embargo_type="comprehensive",
-        ear_country_groups=["D:1", "D:3", "D:4", "E:1"],
-        itar_restricted=True,
-        arms_embargo=True,
-        summary="North Korea (DPRK) is subject to the most restrictive U.S. sanctions regime.",
-        key_restrictions=[
-            "Complete trade embargo",
-            "All EAR-controlled items require license (presumption of denial)",
-            "ITAR proscribed destination",
-            "UN sanctions also apply",
-        ],
-        notes=["Limited humanitarian exceptions"],
-    ),
-    "CU": CountrySanctions(
-        country_code="CU",
-        country_name="Cuba",
-        ofac_programs=["CUBA"],
-        embargo_type="comprehensive",
-        ear_country_groups=["D:1", "E:1", "E:2"],
-        itar_restricted=True,
-        arms_embargo=True,
-        summary="Cuba is subject to comprehensive U.S. economic sanctions under the Cuban embargo.",
-        key_restrictions=[
-            "General prohibition on trade and financial transactions",
-            "Export controls under both EAR and OFAC regulations",
-            "ITAR proscribed destination",
-        ],
-        notes=[
-            "Some people-to-people travel exceptions",
-            "Certain telecom equipment exceptions available",
-        ],
-    ),
-    "SY": CountrySanctions(
-        country_code="SY",
-        country_name="Syria",
-        ofac_programs=["SYRIA"],
-        embargo_type="comprehensive",
-        ear_country_groups=["D:1", "D:3", "E:1"],
-        itar_restricted=True,
-        arms_embargo=True,
-        summary="Syria is subject to comprehensive U.S. sanctions including the Syria Accountability Act.",
-        key_restrictions=[
-            "Broad prohibition on exports",
-            "License requirements for most items",
-            "ITAR proscribed destination",
-            "Designated pursuant to multiple sanctions programs",
-        ],
-        notes=["Limited humanitarian exceptions may apply"],
-    ),
-    "RU": CountrySanctions(
-        country_code="RU",
-        country_name="Russia",
-        ofac_programs=["RUSSIA-EO14024", "UKRAINE-EO13660", "RUSSIA"],
-        embargo_type="targeted",
-        ear_country_groups=["D:1", "D:4", "D:5"],
-        itar_restricted=True,
-        arms_embargo=True,
-        summary="Russia is subject to extensive targeted sanctions and export controls following its invasion of Ukraine.",
-        key_restrictions=[
-            "Comprehensive export controls on technology, especially semiconductors",
-            "Entity List designations for hundreds of Russian entities",
-            "SDN designations for Russian government officials and oligarchs",
-            "Restrictions on luxury goods",
-            "ITAR proscribed destination",
-        ],
-        notes=[
-            "Sanctions regime has expanded significantly since February 2022",
-            "Industry-specific guidance available from BIS and OFAC",
-        ],
-    ),
-    "BY": CountrySanctions(
-        country_code="BY",
-        country_name="Belarus",
-        ofac_programs=["BELARUS"],
-        embargo_type="targeted",
-        ear_country_groups=["D:1", "D:4"],
-        itar_restricted=True,
-        arms_embargo=True,
-        summary="Belarus is subject to extensive targeted sanctions due to support for Russia's actions in Ukraine.",
-        key_restrictions=[
-            "Export controls aligned with Russia restrictions",
-            "SDN designations for Lukashenko regime officials",
-            "Technology restrictions similar to Russia",
-        ],
-        notes=["Sanctions expanded in coordination with Russia measures"],
-    ),
-    "CN": CountrySanctions(
-        country_code="CN",
-        country_name="China",
-        ofac_programs=["CMIC", "NS-CMIC"],
-        embargo_type="targeted",
-        ear_country_groups=["D:1", "D:3", "D:4", "D:5"],
-        itar_restricted=False,
-        arms_embargo=True,
-        summary="China is subject to targeted export controls, especially on advanced technology, and growing sanctions.",
-        key_restrictions=[
-            "Strict controls on advanced semiconductors and chip manufacturing equipment",
-            "Entity List includes many Chinese companies (Huawei, SMIC, etc.)",
-            "Military End-User controls (MEU List)",
-            "U.S. arms embargo since 1989",
-        ],
-        notes=[
-            "Not an ITAR proscribed country, but significant restrictions",
-            "Controls tightening on AI and quantum technology",
-        ],
-    ),
-    "VE": CountrySanctions(
-        country_code="VE",
-        country_name="Venezuela",
-        ofac_programs=["VENEZUELA", "VENEZUELA-EO13692"],
-        embargo_type="targeted",
-        ear_country_groups=["D:1", "D:4"],
-        itar_restricted=False,
-        arms_embargo=True,
-        summary="Venezuela is subject to targeted sanctions on the oil sector and government officials.",
-        key_restrictions=[
-            "Oil sector restrictions (PDVSA)",
-            "SDN designations for Maduro regime officials",
-            "Financial restrictions",
-        ],
-        notes=["Some general licenses available for certain activities"],
-    ),
-    "DE": CountrySanctions(
-        country_code="DE",
-        country_name="Germany",
-        ofac_programs=[],
-        embargo_type="none",
-        ear_country_groups=["A:1", "A:5", "B"],
-        itar_restricted=False,
-        arms_embargo=False,
-        summary="Germany is a close U.S. ally with favorable export control treatment.",
-        key_restrictions=[
-            "Most commercial exports permitted under license exceptions",
-            "Some items may require license based on ECCN",
-        ],
-        notes=["NATO ally with defense trade cooperation agreements"],
-    ),
-    "JP": CountrySanctions(
-        country_code="JP",
-        country_name="Japan",
-        ofac_programs=[],
-        embargo_type="none",
-        ear_country_groups=["A:1", "A:5", "B"],
-        itar_restricted=False,
-        arms_embargo=False,
-        summary="Japan is a close U.S. ally with favorable export control treatment.",
-        key_restrictions=[
-            "Most commercial exports permitted under license exceptions",
-        ],
-        notes=["Treaty ally with extensive defense trade cooperation"],
-    ),
-}
 
 
 def _initialize_country_sanctions() -> None:
     """Initialize country sanctions data in the database."""
     db = get_sanctions_db()
-    for sanctions in COUNTRY_SANCTIONS_DATA.values():
+    for sanctions in get_country_sanctions_data().values():
         db.add_country_sanctions(sanctions)
 
 
@@ -417,23 +244,24 @@ async def check_country_sanctions(country: str) -> dict:
     # Try by code first
     country_upper = country.upper().strip()
     if len(country_upper) == 2:
-        # Check preloaded data
-        if country_upper in COUNTRY_SANCTIONS_DATA:
-            return COUNTRY_SANCTIONS_DATA[country_upper].to_dict()
+        # Check preloaded data from JSON config
+        result = _get_country_sanctions(country_upper)
+        if result:
+            return result.to_dict()
         # Check database
         result = db.get_country_sanctions(country_upper)
         if result:
             return result.to_dict()
 
-    # Try by name
+    # Try by name in database
     result = db.get_country_by_name(country)
     if result:
         return result.to_dict()
 
     # Check preloaded data by name
-    for _code, sanctions in COUNTRY_SANCTIONS_DATA.items():
-        if country.lower() in sanctions.country_name.lower():
-            return sanctions.to_dict()
+    result = _get_country_by_name(country)
+    if result:
+        return result.to_dict()
 
     return {
         "error": f"Country '{country}' not found in sanctions database.",
