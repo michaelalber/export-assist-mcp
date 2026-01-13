@@ -233,6 +233,7 @@ class TestSummarizeResult:
 
     def test_should_return_type_name_for_other_types(self) -> None:
         """Test that other types return their type name."""
+
         # Arrange
         class CustomObject:
             pass
@@ -397,6 +398,7 @@ class TestAuditLogDecoratorAsync:
     @pytest.mark.asyncio
     async def test_should_preserve_function_metadata(self) -> None:
         """Test that decorated function preserves name and docstring."""
+
         # Arrange
         @audit_log
         async def documented_tool() -> None:
@@ -476,6 +478,7 @@ class TestAuditLogDecoratorSync:
 
     def test_should_preserve_sync_function_metadata(self) -> None:
         """Test that decorated sync function preserves name and docstring."""
+
         # Arrange
         @audit_log
         def documented_sync_tool() -> None:
@@ -508,8 +511,7 @@ class TestGetAuditEntries:
         with tempfile.TemporaryDirectory() as tmpdir:
             log_path = Path(tmpdir) / "audit.jsonl"
             log_path.write_text(
-                '{"tool": "tool1", "status": "success"}\n'
-                '{"tool": "tool2", "status": "success"}\n'
+                '{"tool": "tool1", "status": "success"}\n{"tool": "tool2", "status": "success"}\n'
             )
 
             with patch("export_control_mcp.audit.settings") as mock_settings:
@@ -571,9 +573,7 @@ class TestGetAuditEntries:
         with tempfile.TemporaryDirectory() as tmpdir:
             log_path = Path(tmpdir) / "audit.jsonl"
             log_path.write_text(
-                '{"tool": "search_ear"}\n'
-                '{"tool": "search_itar"}\n'
-                '{"tool": "search_ear"}\n'
+                '{"tool": "search_ear"}\n{"tool": "search_itar"}\n{"tool": "search_ear"}\n'
             )
 
             with patch("export_control_mcp.audit.settings") as mock_settings:
@@ -591,12 +591,7 @@ class TestGetAuditEntries:
         # Arrange
         with tempfile.TemporaryDirectory() as tmpdir:
             log_path = Path(tmpdir) / "audit.jsonl"
-            log_path.write_text(
-                '{"tool": "tool1"}\n'
-                '\n'
-                '   \n'
-                '{"tool": "tool2"}\n'
-            )
+            log_path.write_text('{"tool": "tool1"}\n\n   \n{"tool": "tool2"}\n')
 
             with patch("export_control_mcp.audit.settings") as mock_settings:
                 mock_settings.audit_log_path = str(log_path)

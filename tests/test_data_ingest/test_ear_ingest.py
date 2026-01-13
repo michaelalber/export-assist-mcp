@@ -108,9 +108,7 @@ class TestEARPartDetection:
         # Assert
         assert part_num == 742
 
-    def test_should_detect_part_from_filename_with_hyphen(
-        self, ear_ingestor: EARIngestor
-    ) -> None:
+    def test_should_detect_part_from_filename_with_hyphen(self, ear_ingestor: EARIngestor) -> None:
         """Test detecting part number from filename like 'part-740.pdf'."""
         # Arrange
         filename = "part-740"
@@ -136,9 +134,7 @@ class TestEARPartDetection:
         # Assert
         assert part_num == 744
 
-    def test_should_detect_part_from_cfr_citation(
-        self, ear_ingestor: EARIngestor
-    ) -> None:
+    def test_should_detect_part_from_cfr_citation(self, ear_ingestor: EARIngestor) -> None:
         """Test detecting part number from CFR citation."""
         # Arrange
         filename = "regulations"
@@ -150,9 +146,7 @@ class TestEARPartDetection:
         # Assert
         assert part_num == 746
 
-    def test_should_return_none_when_no_part_detected(
-        self, ear_ingestor: EARIngestor
-    ) -> None:
+    def test_should_return_none_when_no_part_detected(self, ear_ingestor: EARIngestor) -> None:
         """Test that None is returned when part cannot be detected."""
         # Arrange
         filename = "random_document"
@@ -169,9 +163,7 @@ class TestEARPDFProcessing:
     """Tests for EAR PDF processing."""
 
     @pytest.mark.asyncio
-    async def test_should_process_pdf_directory(
-        self, ear_ingestor: EARIngestor
-    ) -> None:
+    async def test_should_process_pdf_directory(self, ear_ingestor: EARIngestor) -> None:
         """Test processing a directory of PDF files."""
         # Arrange
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -188,9 +180,7 @@ class TestEARPDFProcessing:
             assert result.regulation_type == "ear"
 
     @pytest.mark.asyncio
-    async def test_should_handle_unsupported_file_type(
-        self, ear_ingestor: EARIngestor
-    ) -> None:
+    async def test_should_handle_unsupported_file_type(self, ear_ingestor: EARIngestor) -> None:
         """Test that unsupported file types are reported as errors."""
         # Arrange
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -236,9 +226,7 @@ class TestEARHTMLProcessing:
             # Chunks may be 0 if content is too short
 
     @pytest.mark.asyncio
-    async def test_should_strip_script_and_style_tags(
-        self, ear_ingestor: EARIngestor
-    ) -> None:
+    async def test_should_strip_script_and_style_tags(self, ear_ingestor: EARIngestor) -> None:
         """Test that script and style tags are removed from HTML."""
         # Arrange
         with tempfile.TemporaryDirectory() as tmpdir:

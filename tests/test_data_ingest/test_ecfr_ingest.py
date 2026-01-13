@@ -81,27 +81,19 @@ class TestECFRPartsMapping:
 class TestECFRIngestorProperties:
     """Tests for ECFRIngestor properties."""
 
-    def test_should_return_ear_type_for_ear_ingestor(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_return_ear_type_for_ear_ingestor(self, ear_ingestor: ECFRIngestor) -> None:
         """Test regulation_type returns EAR."""
         assert ear_ingestor.regulation_type == RegulationType.EAR
 
-    def test_should_return_itar_type_for_itar_ingestor(
-        self, itar_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_return_itar_type_for_itar_ingestor(self, itar_ingestor: ECFRIngestor) -> None:
         """Test regulation_type returns ITAR."""
         assert itar_ingestor.regulation_type == RegulationType.ITAR
 
-    def test_should_return_ear_regulation_name(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_return_ear_regulation_name(self, ear_ingestor: ECFRIngestor) -> None:
         """Test regulation_name returns EAR."""
         assert ear_ingestor.regulation_name == "EAR"
 
-    def test_should_return_itar_regulation_name(
-        self, itar_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_return_itar_regulation_name(self, itar_ingestor: ECFRIngestor) -> None:
         """Test regulation_name returns ITAR."""
         assert itar_ingestor.regulation_name == "ITAR"
 
@@ -109,17 +101,13 @@ class TestECFRIngestorProperties:
 class TestECFRPartsDictionary:
     """Tests for getting parts dictionary based on type."""
 
-    def test_should_return_ear_parts_for_ear_type(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_return_ear_parts_for_ear_type(self, ear_ingestor: ECFRIngestor) -> None:
         """Test _get_parts_from_type returns EAR parts."""
         parts = ear_ingestor._get_parts_from_type()
         assert 730 in parts
         assert 774 in parts
 
-    def test_should_return_itar_parts_for_itar_type(
-        self, itar_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_return_itar_parts_for_itar_type(self, itar_ingestor: ECFRIngestor) -> None:
         """Test _get_parts_from_type returns ITAR parts."""
         parts = itar_ingestor._get_parts_from_type()
         assert 120 in parts
@@ -129,9 +117,7 @@ class TestECFRPartsDictionary:
 class TestXMLElementExtraction:
     """Tests for XML element extraction methods."""
 
-    def test_should_extract_part_number_from_n_attribute(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_extract_part_number_from_n_attribute(self, ear_ingestor: ECFRIngestor) -> None:
         """Test extracting part number from N attribute."""
         # Arrange
         elem = Element("DIV5")
@@ -143,9 +129,7 @@ class TestXMLElementExtraction:
         # Assert
         assert part_num == 730
 
-    def test_should_extract_part_number_from_head_child(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_extract_part_number_from_head_child(self, ear_ingestor: ECFRIngestor) -> None:
         """Test extracting part number from HEAD child element."""
         # Arrange
         elem = Element("DIV5")
@@ -159,9 +143,7 @@ class TestXMLElementExtraction:
         # Assert
         assert part_num == 744
 
-    def test_should_return_none_when_no_part_number(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_return_none_when_no_part_number(self, ear_ingestor: ECFRIngestor) -> None:
         """Test that None is returned when no part number found."""
         # Arrange
         elem = Element("DIV5")
@@ -186,9 +168,7 @@ class TestXMLElementExtraction:
         # Assert
         assert section_num == "730.1"
 
-    def test_should_extract_section_number_from_head_text(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_extract_section_number_from_head_text(self, ear_ingestor: ECFRIngestor) -> None:
         """Test extracting section number from HEAD text."""
         # Arrange
         elem = Element("DIV8")
@@ -202,9 +182,7 @@ class TestXMLElementExtraction:
         # Assert
         assert section_num == "740.2"
 
-    def test_should_extract_title_without_section_number(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_extract_title_without_section_number(self, ear_ingestor: ECFRIngestor) -> None:
         """Test extracting title removes section number prefix."""
         # Arrange
         elem = Element("DIV8")
@@ -219,9 +197,7 @@ class TestXMLElementExtraction:
         assert title == "Scope of the EAR"
         assert "730.1" not in title
 
-    def test_should_extract_all_text_from_element(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_extract_all_text_from_element(self, ear_ingestor: ECFRIngestor) -> None:
         """Test extracting all text content from element tree."""
         # Arrange
         elem = Element("DIV8")
@@ -244,9 +220,7 @@ class TestECFRXMLParsing:
     """Tests for eCFR XML file parsing."""
 
     @pytest.mark.asyncio
-    async def test_should_return_error_for_missing_file(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    async def test_should_return_error_for_missing_file(self, ear_ingestor: ECFRIngestor) -> None:
         """Test error handling for missing XML file."""
         # Arrange
         missing_path = Path("/nonexistent/file.xml")
@@ -259,9 +233,7 @@ class TestECFRXMLParsing:
         assert "not found" in result.errors[0].lower() or "File not found" in result.errors[0]
 
     @pytest.mark.asyncio
-    async def test_should_parse_simple_ecfr_xml(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    async def test_should_parse_simple_ecfr_xml(self, ear_ingestor: ECFRIngestor) -> None:
         """Test parsing a simple eCFR XML structure."""
         # Arrange
         xml_content = """<?xml version="1.0" encoding="UTF-8"?>
@@ -287,9 +259,7 @@ class TestECFRXMLParsing:
             # May have chunks if content is sufficient
 
     @pytest.mark.asyncio
-    async def test_should_handle_malformed_xml_gracefully(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    async def test_should_handle_malformed_xml_gracefully(self, ear_ingestor: ECFRIngestor) -> None:
         """Test handling of malformed XML."""
         # Arrange
         xml_content = """<?xml version="1.0"?>
@@ -312,9 +282,7 @@ class TestECFRXMLParsing:
 class TestAlternativeXMLParsing:
     """Tests for alternative XML parsing fallback."""
 
-    def test_should_parse_with_head_based_structure(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_parse_with_head_based_structure(self, ear_ingestor: ECFRIngestor) -> None:
         """Test alternative parsing using HEAD elements."""
         # Arrange
         from xml.etree.ElementTree import fromstring
@@ -340,9 +308,7 @@ class TestAlternativeXMLParsing:
 class TestChunkPartContent:
     """Tests for chunking part content."""
 
-    def test_should_skip_parts_not_in_dictionary(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_skip_parts_not_in_dictionary(self, ear_ingestor: ECFRIngestor) -> None:
         """Test that parts not in the parts dictionary are skipped."""
         # Arrange
         parts = {730: "General Information"}
@@ -354,9 +320,7 @@ class TestChunkPartContent:
         # Assert
         assert len(chunks) == 0
 
-    def test_should_create_chunks_for_valid_part(
-        self, ear_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_create_chunks_for_valid_part(self, ear_ingestor: ECFRIngestor) -> None:
         """Test chunk creation for a valid part."""
         # Arrange
         parts = {730: "General Information"}
@@ -381,9 +345,7 @@ class TestECFRIngestResult:
         result = ear_ingestor._create_result()
         assert result.regulation_type == "ear"
 
-    def test_should_create_itar_result_type(
-        self, itar_ingestor: ECFRIngestor
-    ) -> None:
+    def test_should_create_itar_result_type(self, itar_ingestor: ECFRIngestor) -> None:
         """Test _create_result sets correct regulation type for ITAR."""
         result = itar_ingestor._create_result()
         assert result.regulation_type == "itar"
@@ -410,12 +372,16 @@ class TestBatchChunkStorage:
             )
 
             # Create XML with enough content for chunks
-            xml_content = """<?xml version="1.0"?>
+            xml_content = (
+                """<?xml version="1.0"?>
             <ECFR>
                 <HEAD>PART 730</HEAD>
-                <P>""" + ("Content about export controls. " * 200) + """</P>
+                <P>"""
+                + ("Content about export controls. " * 200)
+                + """</P>
             </ECFR>
             """
+            )
             xml_path = Path(tmpdir) / "test.xml"
             xml_path.write_text(xml_content)
 

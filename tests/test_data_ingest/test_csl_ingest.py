@@ -134,9 +134,7 @@ class TestCSLSourceMapping:
 class TestCSLIngestorParsing:
     """Tests for CSL JSON parsing."""
 
-    def test_should_parse_csl_item_with_individual_type(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_parse_csl_item_with_individual_type(self, csl_ingestor: CSLIngestor) -> None:
         """Test parsing individual type entries."""
         # Arrange
         item = {
@@ -160,9 +158,7 @@ class TestCSLIngestorParsing:
         assert len(entry.addresses) == 1
         assert "IR" in entry.countries
 
-    def test_should_parse_csl_item_with_entity_type(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_parse_csl_item_with_entity_type(self, csl_ingestor: CSLIngestor) -> None:
         """Test parsing entity type entries."""
         # Arrange
         item = {
@@ -181,9 +177,7 @@ class TestCSLIngestorParsing:
         assert entry.entry_type == EntityType.ENTITY
         assert entry.source_list_code == "entity_list"
 
-    def test_should_parse_csl_item_with_vessel_type(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_parse_csl_item_with_vessel_type(self, csl_ingestor: CSLIngestor) -> None:
         """Test parsing vessel type entries."""
         # Arrange
         item = {
@@ -200,9 +194,7 @@ class TestCSLIngestorParsing:
         assert entry is not None
         assert entry.entry_type == EntityType.VESSEL
 
-    def test_should_parse_csl_item_with_aircraft_type(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_parse_csl_item_with_aircraft_type(self, csl_ingestor: CSLIngestor) -> None:
         """Test parsing aircraft type entries."""
         # Arrange
         item = {
@@ -219,9 +211,7 @@ class TestCSLIngestorParsing:
         assert entry is not None
         assert entry.entry_type == EntityType.AIRCRAFT
 
-    def test_should_return_none_for_empty_name(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_return_none_for_empty_name(self, csl_ingestor: CSLIngestor) -> None:
         """Test that items without names are skipped."""
         # Arrange
         item = {
@@ -236,9 +226,7 @@ class TestCSLIngestorParsing:
         # Assert
         assert entry is None
 
-    def test_should_generate_id_when_missing(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_generate_id_when_missing(self, csl_ingestor: CSLIngestor) -> None:
         """Test ID generation when not provided."""
         # Arrange
         item = {
@@ -254,9 +242,7 @@ class TestCSLIngestorParsing:
         assert entry is not None
         assert entry.id.startswith("CSL-")
 
-    def test_should_handle_string_aliases(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_handle_string_aliases(self, csl_ingestor: CSLIngestor) -> None:
         """Test handling when aliases is a string instead of list."""
         # Arrange
         item = {
@@ -274,9 +260,7 @@ class TestCSLIngestorParsing:
         assert entry is not None
         assert "Single Alias" in entry.aliases
 
-    def test_should_handle_string_programs(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_handle_string_programs(self, csl_ingestor: CSLIngestor) -> None:
         """Test handling when programs is a string instead of list."""
         # Arrange
         item = {
@@ -331,9 +315,7 @@ class TestCSLSourceCodeMapping:
         # Assert
         assert code == "denied_persons"
 
-    def test_should_use_fallback_for_unknown_source(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_use_fallback_for_unknown_source(self, csl_ingestor: CSLIngestor) -> None:
         """Test fallback mapping for unknown sources."""
         # Arrange
         source = "Unknown List"
@@ -344,9 +326,7 @@ class TestCSLSourceCodeMapping:
         # Assert
         assert code == "other"
 
-    def test_should_use_keyword_fallback_for_entity(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_use_keyword_fallback_for_entity(self, csl_ingestor: CSLIngestor) -> None:
         """Test keyword-based fallback for entity-related sources."""
         # Arrange
         source = "Some Entity Related List"
@@ -357,9 +337,7 @@ class TestCSLSourceCodeMapping:
         # Assert
         assert code == "entity_list"
 
-    def test_should_use_keyword_fallback_for_cmic(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    def test_should_use_keyword_fallback_for_cmic(self, csl_ingestor: CSLIngestor) -> None:
         """Test keyword-based fallback for CMIC sources."""
         # Arrange
         source = "Some CMIC Related List"
@@ -482,9 +460,7 @@ class TestCSLIngestion:
         assert len(db_results) >= 1
 
     @pytest.mark.asyncio
-    async def test_should_return_error_when_download_fails(
-        self, csl_ingestor: CSLIngestor
-    ) -> None:
+    async def test_should_return_error_when_download_fails(self, csl_ingestor: CSLIngestor) -> None:
         """Test error handling when download fails and no cache."""
         # Arrange - ensure no cached file exists
         cached_path = csl_ingestor.download_dir / "csl.json"

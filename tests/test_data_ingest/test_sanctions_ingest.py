@@ -33,9 +33,7 @@ def temp_download_dir() -> Path:
 
 
 @pytest.fixture
-def sanctions_ingestor(
-    temp_db: SanctionsDBService, temp_download_dir: Path
-) -> SanctionsIngestor:
+def sanctions_ingestor(temp_db: SanctionsDBService, temp_download_dir: Path) -> SanctionsIngestor:
     """Create sanctions ingestor with test dependencies."""
     return SanctionsIngestor(db=temp_db, download_dir=temp_download_dir)
 
@@ -110,16 +108,12 @@ class TestDateParsing:
         result = sanctions_ingestor._parse_date("01/15/2024")
         assert result == date(2024, 1, 15)
 
-    def test_should_parse_dashed_us_format(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_parse_dashed_us_format(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test parsing dashed US format (MM-DD-YYYY)."""
         result = sanctions_ingestor._parse_date("01-15-2024")
         assert result == date(2024, 1, 15)
 
-    def test_should_parse_month_name_format(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_parse_month_name_format(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test parsing format with month name (January 15, 2024)."""
         result = sanctions_ingestor._parse_date("January 15, 2024")
         assert result == date(2024, 1, 15)
@@ -149,45 +143,33 @@ class TestDateParsing:
 class TestCountryCodeNormalization:
     """Tests for country code normalization."""
 
-    def test_should_return_2_letter_code_as_is(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_return_2_letter_code_as_is(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test that 2-letter codes are returned unchanged."""
         assert sanctions_ingestor._normalize_country_code("CN") == "CN"
         assert sanctions_ingestor._normalize_country_code("RU") == "RU"
 
-    def test_should_map_china_variants(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_map_china_variants(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test mapping China name variants."""
         assert sanctions_ingestor._normalize_country_code("China") == "CN"
         assert sanctions_ingestor._normalize_country_code("PEOPLE'S REPUBLIC OF CHINA") == "CN"
         assert sanctions_ingestor._normalize_country_code("PRC") == "CN"
 
-    def test_should_map_russia_variants(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_map_russia_variants(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test mapping Russia name variants."""
         assert sanctions_ingestor._normalize_country_code("Russia") == "RU"
         assert sanctions_ingestor._normalize_country_code("RUSSIAN FEDERATION") == "RU"
 
-    def test_should_map_iran_variants(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_map_iran_variants(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test mapping Iran name variants."""
         assert sanctions_ingestor._normalize_country_code("Iran") == "IR"
         assert sanctions_ingestor._normalize_country_code("ISLAMIC REPUBLIC OF IRAN") == "IR"
 
-    def test_should_map_north_korea_variants(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_map_north_korea_variants(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test mapping North Korea name variants."""
         assert sanctions_ingestor._normalize_country_code("North Korea") == "KP"
         assert sanctions_ingestor._normalize_country_code("DPRK") == "KP"
 
-    def test_should_map_other_countries(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_map_other_countries(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test mapping other common countries."""
         assert sanctions_ingestor._normalize_country_code("HONG KONG") == "HK"
         assert sanctions_ingestor._normalize_country_code("TAIWAN") == "TW"
@@ -411,9 +393,7 @@ class TestEntityListExcelParsing:
     """Tests for BIS Entity List Excel parsing."""
 
     @pytest.mark.asyncio
-    async def test_should_require_excel_path(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    async def test_should_require_excel_path(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test that Excel path is required."""
         # Act
         result = await sanctions_ingestor.ingest_bis_entity_list(excel_path=None)
@@ -523,9 +503,7 @@ class TestGetText:
         # Assert
         assert result is None
 
-    def test_should_return_none_for_empty_text(
-        self, sanctions_ingestor: SanctionsIngestor
-    ) -> None:
+    def test_should_return_none_for_empty_text(self, sanctions_ingestor: SanctionsIngestor) -> None:
         """Test None is returned for empty text content."""
         from xml.etree.ElementTree import Element
 
