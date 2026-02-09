@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git
+.git/
+.gitignore
+
+# Project specific
+data/
+logs/
+*.log
+.env
+.env.*
+
+# Documentation (not needed in image)
+*.md
+!README.md
+docs/
+
+# Tests (not needed in production image)
+tests/

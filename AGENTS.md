@@ -1,0 +1,142 @@
+# AGENTS.md
+
+This file contains guidelines for agentic coding agents operating in this repository.
+
+## Build/Lint/Test Commands
+
+### Setup
+```bash
+pip install -e ".[dev]"
+```
+
+### Running Tests
+```bash
+# Run all tests
+pytest
+
+# Run a single test file
+pytest tests/test_tools/test_regulations.py
+
+# Run a specific test class
+pytest tests/test_tools/test_regulations.py::TestSearchEar
+
+# Run a specific test method
+pytest tests/test_tools/test_regulations.py::TestSearchEar::test_returns_results
+
+# Run with coverage
+pytest --cov=src/export_control_mcp
+```
+
+### Linting and Type Checking
+```bash
+# Lint
+ruff check src/ tests/
+
+# Type check
+mypy src/
+
+# Security scan
+bandit -r src/ -c pyproject.toml
+```
+
+## Code Style Guidelines
+
+### Imports
+- Follow standard Python import ordering (stdlib, third-party, local)
+- Separate groups with blank lines
+- Use `from __future__ import annotations` for forward references
+- Prefer absolute imports over relative imports
+
+### Formatting
+- Follow PEP 8 style guidelines
+- Use Ruff for linting, auto-formatting, and import sorting
+- Line length: 100 characters max
+- Ruff rules enabled: E, W, F, I (isort), B, C4, UP, S (bandit), T20, SIM, RUF
+
+### Types
+- Type hints on all function parameters and return types
+- Use Pydantic models for configuration and data structures
+- Use TypedDict for structured data types
+- Use dataclasses for simple data containers
+- mypy runs in strict mode (`strict = true`)
+
+### Naming
+- `snake_case` for functions, methods, and variables
+- `PascalCase` for classes and dataclasses
+- `UPPER_CASE` for constants
+- Use descriptive names; avoid unnecessary abbreviations
+
+### Error Handling
+- Use specific exception types, never bare `except:`
+- Use `raise RuntimeError(...)` instead of bare `assert` for runtime checks (bandit S101)
+- Provide helpful error messages
+- Log errors appropriately
+
+### Documentation
+- Google-style docstrings for all public functions and classes
+- Include parameter descriptions with types
+- Include return value descriptions
+- Include example usage when appropriate
+
+### Testing
+- Arrange-Act-Assert pattern for all tests
+- Use fixtures for test data setup
+- Test edge cases and error conditions
+- `asyncio_mode = "auto"` is configured — no `@pytest.mark.asyncio` decorator needed
+- Default pytest options: `-v --tb=short`
+
+### Async
+- Use async/await syntax for async operations
+- Follow existing async patterns in the codebase
+
+## Development Principles
+
+### TDD
+1. **Never write production code without a failing test first**
+2. Cycle: RED (write failing test) → GREEN (minimal code to pass) → REFACTOR
+3. Run tests before committing: `pytest`
+4. Coverage target: 80% minimum for business logic, 95% for security-critical code
+
+### Security by Design (OWASP)
+- Validate all inputs at system boundaries
+- Use defusedxml for all XML parsing (prevents XXE attacks)
+- Use structured Pydantic models for all external data
+- Sanitize filenames and user-provided paths
+- Follow OWASP guidelines for data protection
+- Never include secrets in source code
+
+### YAGNI
+- No abstract interfaces until needed (Rule of Three)
+- No dependency injection containers
+- Prefer composition over inheritance
+- Add abstractions only when patterns emerge
+
+### Quality Gates
+- **Cyclomatic Complexity**: Methods <10, classes <20
+- **Code Coverage**: 80% minimum for business logic, 95% for security-critical code
+- **Maintainability Index**: Target 70+
+- **Code Duplication**: Maximum 3%
+
+## Git Workflow
+
+- Commit after each GREEN phase
+- Commit message format: `feat|fix|test|refactor: brief description`
+- Don't commit failing tests (RED phase is local only)
+
+## Tools
+
+- **Bash**: Use for running tests, linters, and formatters
+- **Read/Write/Edit**: For file operations
+- **Grep/Glob**: For code search
+- **Task**: For complex, multi-step operations
+- **Skill**: For TDD cycles and architecture reviews
+
+## Example Workflow
+
+1. Write a failing test for the new feature
+2. Run `pytest -k <test_name>` to confirm it fails (RED)
+3. Write minimal code to make the test pass (GREEN)
+4. Run full test suite: `pytest`
+5. Run linters: `ruff check src/ tests/ && mypy src/`
+6. Refactor if needed while keeping tests green (REFACTOR)
+7. Commit: `git commit -m "feat: <description>"`

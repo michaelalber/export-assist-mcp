@@ -6,7 +6,7 @@ readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Export Control MCP Team" }
+    { name = "Michael K Alber" }
 ]
 keywords = ["mcp", "export-control", "ear", "itar", "ofac", "sanctions", "compliance"]
 classifiers = [
@@ -61,10 +61,15 @@ dev = [
     "mypy>=1.5",
     "ruff>=0.1.0",
     "bandit[toml]>=1.7.0",
+    "pip-audit",
 ]
 
 [project.scripts]
 export-control-mcp = "export_control_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/michaelalber/export-assist-mcp"
+Repository = "https://github.com/michaelalber/export-assist-mcp"
 
 [build-system]
 requires = ["hatchling"]
@@ -76,30 +81,40 @@ packages = ["src/export_control_mcp"]
 [tool.ruff]
 target-version = "py310"
 line-length = 100
+src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "S",      # flake8-bandit
+    "T20",    # flake8-print
+    "SIM",    # flake8-simplify
+    "RUF",    # Ruff-specific rules
+]
 ignore = [
-    "E501",    # Line too long - many long strings in export control descriptions
+    "E501",    # Line too long - export control description strings
     "SIM105",  # contextlib.suppress - optional style preference
     "SIM108",  # Ternary operator - not always more readable
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["SIM102"]  # Nested if statements ok in tests for clarity
+"tests/**/*.py" = ["S101"]
 
 [tool.mypy]
 python_version = "3.10"
+strict = true
+warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-# Relax strict checks that generate noise
-disallow_any_generics = false  # Allow dict instead of dict[str, Any]
-ignore_missing_imports = true  # Allow missing stubs (defusedxml, etc.)
-warn_return_any = false  # Allow returning Any from typed functions
+exclude = ["tests", ".venv"]
+# Third-party libs without type stubs (chromadb, defusedxml, sentence-transformers)
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
@@ -107,32 +122,29 @@ module = [
     "export_control_mcp.services.vector_store",
     "export_control_mcp.services.embeddings",
 ]
-# Data ingestion code uses dynamic dicts; vector store has chromadb type issues
+# Data ingestion uses dynamic dicts; vector store has chromadb type issues
 disable_error_code = ["arg-type", "return-value", "attr-defined", "assignment", "operator", "index", "var-annotated"]
 
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
+
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
 testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-v --tb=short"
 markers = [
+    "integration: integration tests requiring external services",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
 
-[tool.bandit]
-# Bandit security linter configuration
-# https://bandit.readthedocs.io/en/latest/config.html
-targets = ["src"]
-exclude_dirs = ["tests", ".venv", "venv"]
-skips = [
-    # B101: assert used - acceptable in non-production code paths
-    "B101",
-    # B110: try/except/pass - used intentionally for optional checks
-    "B110",
-    # B405: xml.etree.ElementTree.Element - used for type hints only, actual parsing uses defusedxml
-    "B405",
-]
-# Severity levels: LOW, MEDIUM, HIGH
-# Confidence levels: LOW, MEDIUM, HIGH
+[tool.coverage.run]
+source = ["src/export_control_mcp"]
+branch = true
 
-[tool.bandit.assert_used]
-# Allow assert in test files
-exclude_dirs = ["tests"]
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
