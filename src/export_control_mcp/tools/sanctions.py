@@ -4,6 +4,8 @@ Provides search capabilities for BIS Entity List, OFAC SDN List,
 Denied Persons List, and country-level sanctions information.
 """
 
+from typing import Any
+
 from export_control_mcp.audit import audit_log
 from export_control_mcp.models.sanctions import EntityType
 from export_control_mcp.resources.country_sanctions import (
@@ -33,7 +35,7 @@ async def search_entity_list(
     country: str | None = None,
     fuzzy_threshold: float = 0.7,
     limit: int = 20,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Search the BIS Entity List for parties subject to export restrictions.
 
@@ -95,7 +97,7 @@ async def search_sdn_list(
     program: str | None = None,
     fuzzy_threshold: float = 0.7,
     limit: int = 20,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Search the OFAC Specially Designated Nationals (SDN) List.
 
@@ -167,7 +169,7 @@ async def search_denied_persons(
     query: str,
     fuzzy_threshold: float = 0.7,
     limit: int = 20,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Search the BIS Denied Persons List.
 
@@ -209,7 +211,7 @@ async def search_denied_persons(
 
 @mcp.tool()
 @audit_log
-async def check_country_sanctions(country: str) -> dict:
+async def check_country_sanctions(country: str) -> dict[str, Any]:
     """
     Get comprehensive sanctions and export control information for a country.
 
@@ -293,7 +295,7 @@ async def search_consolidated_screening_list(
     country: str | None = None,
     fuzzy_threshold: float = 0.7,
     limit: int = 20,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Search the Consolidated Screening List (CSL) for restricted parties.
 
@@ -372,7 +374,7 @@ async def search_consolidated_screening_list(
 
 @mcp.tool()
 @audit_log
-async def get_csl_statistics() -> dict:
+async def get_csl_statistics() -> dict[str, Any]:
     """
     Get statistics about the Consolidated Screening List database.
 

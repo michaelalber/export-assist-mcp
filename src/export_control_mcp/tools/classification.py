@@ -4,6 +4,8 @@ Provides tools for AI-assisted classification suggestions, decision tree
 guidance, and license exception evaluation.
 """
 
+from typing import Any
+
 from export_control_mcp.audit import audit_log
 from export_control_mcp.models.classification import (
     ClassificationConfidence,
@@ -152,7 +154,7 @@ ECCN_CATEGORY_KEYWORDS = {
 }
 
 
-def _analyze_description(description: str) -> dict:
+def _analyze_description(description: str) -> dict[str, Any]:
     """Analyze item description for classification indicators."""
     desc_lower = description.lower()
 
@@ -178,7 +180,7 @@ def _analyze_description(description: str) -> dict:
 async def suggest_classification(
     item_description: str,
     additional_context: str = "",
-) -> dict:
+) -> dict[str, Any]:
     """
     Provide AI-assisted classification suggestion for an item.
 
@@ -335,7 +337,7 @@ async def suggest_classification(
 async def classification_decision_tree(
     item_description: str,
     step: int = 1,
-) -> dict:
+) -> dict[str, Any]:
     """
     Walk through the classification decision tree step by step.
 
@@ -456,7 +458,7 @@ async def check_license_exception(
     destination_country: str,
     end_use: str = "",
     end_user_type: str = "commercial",
-) -> dict:
+) -> dict[str, Any]:
     """
     Evaluate which license exceptions may apply to a specific export transaction.
 
@@ -638,7 +640,7 @@ async def get_recent_updates(
     agency: str = "all",
     days: int = 30,
     document_type: str = "all",
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Get recent export control regulatory updates from the Federal Register.
 

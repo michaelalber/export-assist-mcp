@@ -58,7 +58,7 @@ class EARIngestor(BaseIngestor):
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         """Initialize the EAR ingestor."""
-        super().__init__(*args, **kwargs)  # type: ignore[arg-type]
+        super().__init__(*args, **kwargs)
         self._chunker = RegulationChunker(max_tokens=512, overlap_tokens=50)
 
     @property

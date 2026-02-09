@@ -2,6 +2,7 @@
 
 from datetime import date
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -65,7 +66,7 @@ class EntityListEntry(BaseModel):
         description="Standard order reference if applicable",
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "id": self.id,
@@ -98,7 +99,7 @@ class SDNEntry(BaseModel):
     )
     aliases: list[str] = Field(default_factory=list, description="AKA names")
     addresses: list[str] = Field(default_factory=list, description="Known addresses")
-    ids: list[dict] = Field(
+    ids: list[dict[str, Any]] = Field(
         default_factory=list,
         description="ID documents (passport, national ID, etc.)",
     )
@@ -116,7 +117,7 @@ class SDNEntry(BaseModel):
     )
     remarks: str = Field(default="", description="Additional remarks")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "id": self.id,
@@ -161,7 +162,7 @@ class DeniedPersonEntry(BaseModel):
         description="Federal Register citation",
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "id": self.id,
@@ -216,7 +217,7 @@ class CountrySanctions(BaseModel):
         description="Additional notes and considerations",
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "country_code": self.country_code,
@@ -258,7 +259,7 @@ class SanctionsSearchResult(BaseModel):
         description="The actual value that matched",
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "entry": self.entry.to_dict(),

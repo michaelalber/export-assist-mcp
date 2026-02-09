@@ -1,6 +1,7 @@
 """Pydantic models for export classification assistance."""
 
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -62,7 +63,7 @@ class ClassificationSuggestion(BaseModel):
         description="Legal disclaimer",
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "item_description": self.item_description,
@@ -115,7 +116,7 @@ class DecisionTreeResult(BaseModel):
         description="Whether the decision tree has reached a conclusion",
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "item_description": self.item_description,
@@ -196,7 +197,7 @@ class LicenseExceptionEvaluation(BaseModel):
         description="Important warnings or considerations",
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "eccn": self.eccn,
@@ -247,7 +248,7 @@ class FederalRegisterNotice(BaseModel):
         default="", description="URL to the Federal Register document"
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "document_number": self.document_number,

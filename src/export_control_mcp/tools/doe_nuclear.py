@@ -4,6 +4,8 @@ Provides tools for 10 CFR 810 queries and DOE nuclear-related
 export control guidance.
 """
 
+from typing import Any
+
 from export_control_mcp.audit import audit_log
 from export_control_mcp.resources.doe_nuclear import (
     GENERALLY_AUTHORIZED_ACTIVITIES,
@@ -19,7 +21,7 @@ from export_control_mcp.server import mcp
 
 @mcp.tool()
 @audit_log
-async def check_cfr810_country(country: str) -> dict:
+async def check_cfr810_country(country: str) -> dict[str, Any]:
     """
     Check 10 CFR 810 authorization status for a country.
 
@@ -94,7 +96,7 @@ async def check_cfr810_country(country: str) -> dict:
 @audit_log
 async def list_cfr810_countries(
     authorization_type: str = "generally_authorized",
-) -> dict:
+) -> dict[str, Any]:
     """
     List countries by their 10 CFR 810 authorization status.
 
@@ -159,7 +161,7 @@ async def list_cfr810_countries(
 
 @mcp.tool()
 @audit_log
-async def get_cfr810_activities() -> dict:
+async def get_cfr810_activities() -> dict[str, Any]:
     """
     Get information about 10 CFR 810 activity categories.
 
@@ -212,7 +214,7 @@ async def get_cfr810_activities() -> dict:
 async def check_cfr810_activity(
     activity_description: str,
     destination_country: str,
-) -> dict:
+) -> dict[str, Any]:
     """
     Analyze a nuclear technology activity for 10 CFR 810 requirements.
 

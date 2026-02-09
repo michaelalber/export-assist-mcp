@@ -4,6 +4,8 @@ Provides semantic search capabilities for EAR and ITAR regulations,
 ECCN lookups, USML category information, and jurisdiction analysis.
 """
 
+from typing import Any
+
 from export_control_mcp.audit import audit_log
 from export_control_mcp.models.regulations import (
     ECCN,
@@ -27,7 +29,7 @@ async def search_ear(
     query: str,
     part: str | None = None,
     limit: int = 10,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Search the Export Administration Regulations (EAR) using semantic search.
 
@@ -90,7 +92,7 @@ async def search_itar(
     query: str,
     part: str | None = None,
     limit: int = 10,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Search the International Traffic in Arms Regulations (ITAR) using semantic search.
 
@@ -156,7 +158,7 @@ async def search_regulations(
     query: str,
     regulation_type: str = "all",
     limit: int = 10,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """
     Search both EAR and ITAR regulations using semantic search.
 
@@ -215,7 +217,7 @@ async def search_regulations(
 
 @mcp.tool()
 @audit_log
-async def get_eccn_details(eccn: str) -> dict:
+async def get_eccn_details(eccn: str) -> dict[str, Any]:
     """
     Look up details for a specific Export Control Classification Number (ECCN).
 
@@ -259,7 +261,7 @@ async def get_eccn_details(eccn: str) -> dict:
 
 @mcp.tool()
 @audit_log
-async def get_usml_category_details(category: str) -> dict:
+async def get_usml_category_details(category: str) -> dict[str, Any]:
     """
     Look up details for a United States Munitions List (USML) category.
 
@@ -299,7 +301,7 @@ async def get_usml_category_details(category: str) -> dict:
 async def compare_jurisdictions(
     item_description: str,
     include_search_results: bool = True,
-) -> dict:
+) -> dict[str, Any]:
     """
     Analyze whether an item likely falls under EAR or ITAR jurisdiction.
 
@@ -471,7 +473,7 @@ async def compare_jurisdictions(
 
 @mcp.tool()
 @audit_log
-async def explain_export_term(term: str) -> dict:
+async def explain_export_term(term: str) -> dict[str, Any]:
     """
     Look up the definition of an export control term or acronym.
 
@@ -515,7 +517,7 @@ async def explain_export_term(term: str) -> dict:
 
 @mcp.tool()
 @audit_log
-async def get_license_exception_info(exception_code: str) -> dict:
+async def get_license_exception_info(exception_code: str) -> dict[str, Any]:
     """
     Get details about a specific EAR license exception.
 
@@ -562,7 +564,7 @@ async def get_license_exception_info(exception_code: str) -> dict:
 
 @mcp.tool()
 @audit_log
-async def get_country_group_info(country: str) -> dict:
+async def get_country_group_info(country: str) -> dict[str, Any]:
     """
     Get EAR country group memberships for a specific country.
 

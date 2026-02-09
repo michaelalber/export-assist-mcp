@@ -4,6 +4,7 @@ import json
 import sqlite3
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 from rapidfuzz import fuzz
 
@@ -299,7 +300,7 @@ class SanctionsDBService:
             JOIN entity_list_fts ON e.rowid = entity_list_fts.rowid
             WHERE entity_list_fts MATCH ?
         """
-        params: list = [f'"{fts_query}"']
+        params: list[Any] = [f'"{fts_query}"']
 
         if country:
             sql += " AND e.country = ?"
@@ -449,7 +450,7 @@ class SanctionsDBService:
             JOIN sdn_list_fts ON s.rowid = sdn_list_fts.rowid
             WHERE sdn_list_fts MATCH ?
         """
-        params: list = [f'"{fts_query}"']
+        params: list[Any] = [f'"{fts_query}"']
 
         if sdn_type:
             sql += " AND s.sdn_type = ?"
@@ -777,7 +778,7 @@ class SanctionsDBService:
         source_list: str | None,
         country: str | None,
         limit: int,
-    ) -> tuple[list[dict], set[str]]:
+    ) -> tuple[list[dict[str, Any]], set[str]]:
         """Perform FTS5 search on CSL table.
 
         Args:
@@ -790,7 +791,7 @@ class SanctionsDBService:
             Tuple of (results list, set of seen IDs)
         """
         conn = self._get_connection()
-        results = []
+        results: list[dict[str, Any]] = []
         seen_ids: set[str] = set()
 
         fts_query = query.replace('"', '""')
@@ -800,7 +801,7 @@ class SanctionsDBService:
             JOIN csl_fts ON c.rowid = csl_fts.rowid
             WHERE csl_fts MATCH ?
         """
-        params: list = [f'"{fts_query}"']
+        params: list[Any] = [f'"{fts_query}"']
 
         if source_list:
             sql += " AND c.source_list = ?"
@@ -831,7 +832,7 @@ class SanctionsDBService:
         country: str | None,
         fuzzy_threshold: float,
         seen_ids: set[str],
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Perform fuzzy search on CSL table for entries not found via FTS.
 
         Args:
@@ -929,7 +930,7 @@ class SanctionsDBService:
         country: str | None = None,
         fuzzy_threshold: float = 0.7,
         limit: int = 20,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Search the Consolidated Screening List.
 
         Uses a two-phase search: FTS5 for fast exact/prefix matching,
@@ -959,7 +960,7 @@ class SanctionsDBService:
         results.sort(key=lambda r: r.get("match_score", 0), reverse=True)
         return results[:limit]
 
-    def _row_to_csl_dict(self, row: sqlite3.Row) -> dict:
+    def _row_to_csl_dict(self, row: sqlite3.Row) -> dict[str, Any]:
         """Convert database row to CSL dictionary."""
         return {
             "id": row["id"],
@@ -979,7 +980,7 @@ class SanctionsDBService:
         conn.execute("DELETE FROM csl")
         conn.commit()
 
-    def get_csl_stats(self) -> dict:
+    def get_csl_stats(self) -> dict[str, int]:
         """Get CSL statistics by source list."""
         conn = self._get_connection()
         cursor = conn.execute("""
@@ -1004,7 +1005,7 @@ class SanctionsDBService:
         """)
         conn.commit()
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> dict[str, Any]:
         """Get database statistics."""
         conn = self._get_connection()
         stats = {}

@@ -125,7 +125,8 @@ class ECFRIngestor(BaseIngestor):
             title_num = 15 if self._regulation_type == RegulationType.EAR else 22
             for title in data.get("titles", []):
                 if title.get("number") == title_num:
-                    return title.get("up_to_date_as_of")
+                    result: str | None = title.get("up_to_date_as_of")
+                    return result
             return None
         except Exception as e:
             logger.warning(f"Failed to get eCFR date: {e}")

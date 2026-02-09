@@ -263,7 +263,7 @@ class SanctionsIngestor:
 
         return entries
 
-    def _get_text(self, elem: Element, tag: str, ns: dict | None = None) -> str | None:
+    def _get_text(self, elem: Element, tag: str, ns: dict[str, str] | None = None) -> str | None:
         """Get text content of a child element."""
         if ns:
             child = elem.find(tag, ns)

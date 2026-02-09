@@ -1,6 +1,7 @@
 """Pydantic models for export control regulations."""
 
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -38,7 +39,7 @@ class SearchResult(BaseModel):
     chunk: RegulationChunk = Field(..., description="The matched regulation chunk")
     score: float = Field(..., description="Relevance score (0-1, higher is better)")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "id": self.chunk.id,
@@ -180,7 +181,7 @@ class ECCN(BaseModel):
             description=description,
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "eccn": self.raw,
@@ -308,7 +309,7 @@ class USMLCategory(BaseModel):
             description=description,
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "category": self.number_roman,
@@ -358,7 +359,7 @@ class JurisdictionAnalysis(BaseModel):
         description="Recommended next steps for classification",
     )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for MCP tool response."""
         return {
             "item_description": self.item_description,

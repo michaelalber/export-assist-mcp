@@ -8,6 +8,8 @@ This module contains curated reference data for:
 - Control reason codes
 """
 
+from typing import Any
+
 from export_control_mcp.models.regulations import ECCN, USMLCategory, USMLItem
 
 # Control reason codes
@@ -97,7 +99,7 @@ LICENSE_EXCEPTIONS = {
 
 # Sample ECCN data (commonly referenced ECCNs)
 # In production, this would be loaded from the full CCL database
-ECCN_DATA: dict[str, dict] = {
+ECCN_DATA: dict[str, dict[str, Any]] = {
     "0A501": {
         "title": "Firearms and related commodities",
         "description": "Firearms, ammunition, and related commodities as follows",
@@ -218,7 +220,7 @@ def get_eccn(eccn_str: str) -> ECCN | None:
 
 
 # USML Categories (22 CFR 121)
-USML_CATEGORIES: dict[int, dict] = {
+USML_CATEGORIES: dict[int, dict[str, Any]] = {
     1: {
         "title": "Firearms, Close Assault Weapons and Combat Shotguns",
         "description": "Nonautomatic and semi-automatic firearms to caliber .50 inclusive, combat shotguns, and silencers, flash suppressors, and specially designed components.",
@@ -459,7 +461,7 @@ def get_usml_category(category: int | str) -> USMLCategory | None:
 
 
 # EAR Country Groups (15 CFR 740 Supplement No. 1)
-COUNTRY_GROUPS: dict[str, dict] = {
+COUNTRY_GROUPS: dict[str, dict[str, Any]] = {
     "A:1": {
         "name": "Wassenaar Arrangement",
         "description": "Participating states of the Wassenaar Arrangement",
@@ -746,7 +748,7 @@ def get_country_groups(country: str) -> list[str]:
 
 
 # Export control glossary
-GLOSSARY: dict[str, dict] = {
+GLOSSARY: dict[str, dict[str, Any]] = {
     "deemed export": {
         "definition": "Release of technology or source code subject to the EAR to a foreign national in the United States. Such release is 'deemed' to be an export to the home country of the foreign national.",
         "regulation": "15 CFR 734.13",
@@ -810,7 +812,7 @@ GLOSSARY: dict[str, dict] = {
 }
 
 
-def get_glossary_term(term: str) -> dict | None:
+def get_glossary_term(term: str) -> dict[str, Any] | None:
     """
     Look up a glossary term.
 

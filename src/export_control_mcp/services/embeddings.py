@@ -1,5 +1,7 @@
 """Embedding service using sentence-transformers."""
 
+from typing import cast
+
 from sentence_transformers import SentenceTransformer
 
 from export_control_mcp.models.errors import EmbeddingError
@@ -52,7 +54,7 @@ class EmbeddingService:
         """
         try:
             embedding = self.model.encode(text, convert_to_numpy=True)
-            return embedding.tolist()
+            return cast(list[float], embedding.tolist())
         except Exception as e:
             raise EmbeddingError(f"Failed to generate embedding: {e}") from e
 
@@ -80,6 +82,6 @@ class EmbeddingService:
                 convert_to_numpy=True,
                 show_progress_bar=len(texts) > 100,
             )
-            return embeddings.tolist()
+            return cast(list[list[float]], embeddings.tolist())
         except Exception as e:
             raise EmbeddingError(f"Failed to generate batch embeddings: {e}") from e
