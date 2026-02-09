@@ -5,11 +5,15 @@ Downloads and parses export control regulations from the official eCFR API:
 - ITAR: 22 CFR 120-130 (International Traffic in Arms Regulations)
 """
 
+from __future__ import annotations
+
 import logging
 import re
 from pathlib import Path
-from typing import Any
-from xml.etree.ElementTree import Element  # Type only
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from xml.etree.ElementTree import Element  # nosec B405 - type annotation only
 
 import defusedxml.ElementTree as ET  # noqa: N817 - ET is standard convention
 import httpx

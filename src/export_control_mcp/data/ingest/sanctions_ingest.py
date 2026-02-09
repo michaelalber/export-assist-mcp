@@ -7,11 +7,15 @@ Downloads and parses sanctions data from:
 - BIS Denied Persons List (Commerce) - TXT format
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
-from xml.etree.ElementTree import Element  # Type only
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from xml.etree.ElementTree import Element  # nosec B405 - type annotation only
 
 import defusedxml.ElementTree as ET  # noqa: N817 - ET is standard convention
 import httpx

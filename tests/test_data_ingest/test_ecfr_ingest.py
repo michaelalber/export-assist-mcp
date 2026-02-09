@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 from xml.etree.ElementTree import Element
 
+import defusedxml.ElementTree as SafeET
 import pytest
 
 from export_control_mcp.data.ingest.ecfr_ingest import (
@@ -285,8 +286,6 @@ class TestAlternativeXMLParsing:
     def test_should_parse_with_head_based_structure(self, ear_ingestor: ECFRIngestor) -> None:
         """Test alternative parsing using HEAD elements."""
         # Arrange
-        from xml.etree.ElementTree import fromstring
-
         xml_content = """
         <ECFR>
             <HEAD>PART 730 - General Information</HEAD>
@@ -295,7 +294,7 @@ class TestAlternativeXMLParsing:
             <P>License exceptions are available.</P>
         </ECFR>
         """
-        root = fromstring(xml_content)
+        root = SafeET.fromstring(xml_content)
         parts = EAR_PARTS
 
         # Act
