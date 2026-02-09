@@ -53,7 +53,7 @@ def get_sanctions_db() -> "SanctionsDBService":
 
 __all__ = [
     "get_embedding_service",
-    "get_vector_store",
     "get_rag_service",
     "get_sanctions_db",
+    "get_vector_store",
 ]

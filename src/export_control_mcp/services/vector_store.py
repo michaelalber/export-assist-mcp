@@ -1,5 +1,6 @@
 """Vector store service using ChromaDB."""
 
+import logging
 from typing import Any
 
 import chromadb
@@ -7,6 +8,8 @@ from chromadb import ClientAPI, Collection
 
 from export_control_mcp.models.errors import VectorStoreError
 from export_control_mcp.models.regulations import RegulationChunk, RegulationType
+
+logger = logging.getLogger(__name__)
 
 
 class VectorStoreService:
@@ -255,7 +258,7 @@ class VectorStoreService:
             try:
                 total += self._get_collection(reg_type).count()
             except Exception:
-                pass  # Collection may not exist yet
+                logger.debug("Collection %s not found, skipping", reg_type.value)
         return total
 
     def delete_all(self, regulation_type: RegulationType | None = None) -> None:

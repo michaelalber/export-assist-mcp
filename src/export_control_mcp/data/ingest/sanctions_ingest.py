@@ -346,7 +346,7 @@ class SanctionsIngestor:
                 continue
 
             # Skip header lines
-            if line.startswith("#") or "NAME" in line.upper() and i < 5:
+            if line.startswith("#") or ("NAME" in line.upper() and i < 5):
                 continue
 
             # Try different delimiters

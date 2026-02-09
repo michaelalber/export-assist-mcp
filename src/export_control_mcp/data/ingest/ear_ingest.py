@@ -213,7 +213,7 @@ class EARIngestor(BaseIngestor):
             return int(match.group(1))
 
         # Check content for part references
-        match = re.search(r"Part\s+(\d{3})\s*[-–—]\s*", content)
+        match = re.search(r"Part\s+(\d{3})\s*[-\u2013\u2014]\s*", content)
         if match:
             return int(match.group(1))
 
