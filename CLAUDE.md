@@ -121,6 +121,7 @@ docker compose down
 - Bind HTTP transport to `127.0.0.1` by default
 - Route all external API calls (Federal Register, CSL) through approved proxy on lab networks
 - Never include secrets in source code — use environment variables
+- All rules align with [OWASP Top 10 (2025)](https://owasp.org/Top10/2025/) guidance
 
 ### YAGNI (You Aren't Gonna Need It)
 - Start with direct implementations
