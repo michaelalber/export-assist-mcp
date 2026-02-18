@@ -97,19 +97,23 @@ bandit -r src/ -c pyproject.toml
 3. Run tests before committing: `pytest`
 4. Coverage target: 80% minimum for business logic, 95% for security-critical code
 
-### Security by Design (OWASP)
+### Security-By-Design
 - Validate all inputs at system boundaries
 - Use defusedxml for all XML parsing (prevents XXE attacks)
-- Use structured Pydantic models for all external data
-- Sanitize filenames and user-provided paths
-- Follow OWASP guidelines for data protection
-- Never include secrets in source code
+- Use structured Pydantic models for all MCP tool inputs and outputs
+- Sanitize search parameters — redact sensitive fields (passwords, tokens, keys) in audit logs
+- Treat sanctions screening data and export classifications as CUI-adjacent
+- Audit log all tool invocations — mandatory for production use
+- Bind HTTP transport to `127.0.0.1` by default
+- Route all external API calls (Federal Register, CSL) through approved proxy on lab networks
+- Never include secrets in source code — use environment variables
 
-### YAGNI
-- No abstract interfaces until needed (Rule of Three)
+### YAGNI (You Aren't Gonna Need It)
+- Start with direct implementations
+- Add abstractions only when complexity demands it
+- Create interfaces only when multiple implementations exist
 - No dependency injection containers
 - Prefer composition over inheritance
-- Add abstractions only when patterns emerge
 
 ### Quality Gates
 - **Cyclomatic Complexity**: Methods <10, classes <20
