@@ -1,6 +1,7 @@
-# AGENTS.md
+# AGENTS.md — export-assist-mcp
 
-This file contains guidelines for agentic coding agents operating in this repository.
+> Global rules (TDD, security, quality gates, Python standards, AI behavior) are in
+> `~/.config/opencode/AGENTS.md` and apply here automatically.
 
 ## Build/Lint/Test Commands
 
@@ -89,38 +90,16 @@ bandit -r src/ -c pyproject.toml
 - Use async/await syntax for async operations
 - Follow existing async patterns in the codebase
 
-## Development Principles
+## Project-Specific Security
 
-### TDD
-1. **Never write production code without a failing test first**
-2. Cycle: RED (write failing test) → GREEN (minimal code to pass) → REFACTOR
-3. Run tests before committing: `pytest`
-4. Coverage target: 80% minimum for business logic, 95% for security-critical code
-
-### Security-By-Design
-- Validate all inputs at system boundaries
-- Use defusedxml for all XML parsing (prevents XXE attacks)
+In addition to global security rules:
+- Use `defusedxml` for all XML parsing (prevents XXE attacks)
 - Use structured Pydantic models for all MCP tool inputs and outputs
 - Sanitize search parameters — redact sensitive fields (passwords, tokens, keys) in audit logs
 - Treat sanctions screening data and export classifications as CUI-adjacent
 - Audit log all tool invocations — mandatory for production use
 - Bind HTTP transport to `127.0.0.1` by default
 - Route all external API calls (Federal Register, CSL) through approved proxy on lab networks
-- Never include secrets in source code — use environment variables
-- All rules align with [OWASP Top 10 (2025)](https://owasp.org/Top10/2025/) guidance
-
-### YAGNI (You Aren't Gonna Need It)
-- Start with direct implementations
-- Add abstractions only when complexity demands it
-- Create interfaces only when multiple implementations exist
-- No dependency injection containers
-- Prefer composition over inheritance
-
-### Quality Gates
-- **Cyclomatic Complexity**: Methods <10, classes <20
-- **Code Coverage**: 80% minimum for business logic, 95% for security-critical code
-- **Maintainability Index**: Target 70+
-- **Code Duplication**: Maximum 3%
 
 ## Git Workflow
 
